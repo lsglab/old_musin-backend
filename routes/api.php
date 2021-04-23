@@ -2,13 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+//use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\PermissionController;
+//use App\Http\Controllers\RoleController;
+//use App\Http\Controllers\SubjectController;
+//use App\Http\Controllers\PermissionController;
 use App\Models\Subject;
-use App\Http\Controllers\DatabaseController;
+//use App\Http\Controllers\DatabaseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,11 +26,15 @@ Route::post('login',[AuthController::class,'authenticate']);
 Route::group(['middleware' => ['jwt.verify']],function(){
     $verbs = ['post','get','put','delete'];
 
-    Route::match($verbs,'/user',[UserController::class,'handle']);
+    Route::match($verbs,'/user',function(){
+        return "WORKING";
+    });
 
-    Route::match($verbs,'/roles',[RoleController::class,'handle']);
+    //Route::match($verbs,'/user',[UserController::class,'handle']);
 
-    Route::match($verbs,'subjects',[SubjectController::class,'handle']);
+    //Route::match($verbs,'/roles',[RoleController::class,'handle']);
+
+    //Route::match($verbs,'subjects',[SubjectController::class,'handle']);
 });
 
 

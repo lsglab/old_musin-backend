@@ -23,7 +23,7 @@ class Attribute extends Model
     ];
 
     protected $attributes = [
-        'required' => false,
+        'required' => true,
         'default' => null,
         'unique' => false,
         'relation' => null,

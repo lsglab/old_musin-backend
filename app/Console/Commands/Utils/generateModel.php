@@ -2,6 +2,7 @@
 namespace App\Console\Commands\Utils;
 
 use App\Models\Subject;
+use Illuminate\Support\Str;
 
 class GenerateModel {
 
@@ -14,6 +15,8 @@ class GenerateModel {
         $relations = GenerateModel::getRelations($subject);
         $uses = $relations[0];
         $functions = $relations[1];
+
+        $attributes = GenerateModel::getDefaults($subject);
 
         $extends = "Model";
 
@@ -38,6 +41,7 @@ class GenerateModel {
 
             protected \$fillable = [$fillable];
             protected \$hidden = [$hidden];
+            protected \$attributes = [$attributes];
 
             $functions
         }";
@@ -74,11 +78,7 @@ class GenerateModel {
             if($attribute->type === 'relation'){
                 $foreign = Subject::where('id',$attribute->relation)->first();
 
-                $functionName = strtolower($foreign->model);
-
-                if($attribute->relation_type !== 'hasOne'){
-                    $functionName = $functionName.'s';
-                }
+                $functionName = $foreign->table;
 
                 $function = "public function $functionName(){
                     \$this->$attribute->relation_type($foreign->model::class);
@@ -92,5 +92,48 @@ class GenerateModel {
         }
 
         return array($uses,$functions);
+    }
+
+    public static function getDefaults($subject){
+        $defaults = "";
+        foreach($subject->attributes as $attribute){
+
+            if($attribute->type === 'relation' || $attribute->required == true){
+                continue;
+            } else {
+                $value;
+                $name = $attribute->name;
+
+                //echo "$attribute \n \n";
+
+                $default = false;
+
+                if($attribute->default != null){
+                    $default = $attribute->default;
+                    echo "default $default \n";
+                }
+
+                switch($attribute->type){
+                    case 'boolean':
+                        $value = $default === false ? false : boolval($default);
+                        break;
+                    case 'integer':
+                        $value = $default === false ? 0 : intval($default);
+                        break;
+                    case 'relation':
+                        $value = $default === false ? 0 : $default;
+                        break;
+                    case 'date':
+                        $value = $default === false ? now() : $default;
+                        break;
+                    default:
+                        $value = $default === false ? "''" : $default;
+                        break;
+                }
+
+                $defaults = $defaults."'$name' => $value, \n";
+            }
+        }
+        return $defaults;
     }
 }

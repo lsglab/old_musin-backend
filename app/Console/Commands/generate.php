@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use App\Models\Subject;
 use App\Console\Commands\Utils\GenerateMigration;
 use App\Console\Commands\Utils\GenerateModel;
-use App\Console\Commands\Utils\GenerateFactory;
 
 class generate extends Command
 {
@@ -16,7 +15,6 @@ class generate extends Command
         'models' => '/app/Models/generated/',
         'controllers' => '/app/Http/Controllers/generated/',
         'migrations' => '/database/migrations/',
-        'factories' => '/database/factories/generated/',
     ];
     /**
      * The name and signature of the console command.
@@ -55,7 +53,6 @@ class generate extends Command
         $this->generateDirs();
         $this->deleteMigrations();
         $this->deleteModels();
-        $this->deleteFactories();
 
         $subjects = Subject::where('type','!=','subject')->get();
 
@@ -64,7 +61,6 @@ class generate extends Command
         foreach($subjects as $i => $subject){
             $this->createMigration($subject,$i);
             $this->createModel($subject);
-            $this->createFactory($subject);
         }
     }
 
@@ -75,13 +71,6 @@ class generate extends Command
         $this->writeToFile($fileName,'models',$file);
     }
 
-    function createFactory($subject){
-        $fileName = "{$subject->model}Factory";
-
-        $file = GenerateFactory::run($subject);
-        $this->writeToFile($fileName,'factories',$file);
-    }
-
     function createMigration($subject,$i){
         $i = str_pad($i,6,'0',STR_PAD_LEFT);
         // every migration with a 3000 is auto generated
@@ -90,14 +79,6 @@ class generate extends Command
 
         $file = GenerateMigration::run($subject);
         $this->writeToFile($fileName,'migrations',$file);
-    }
-
-    function deleteFactories(){
-        $path = $this->getDirectoryPath('factories')."*.php";
-        $files = glob($path);
-        foreach($files as $file){
-            unlink($file);
-        }
     }
 
     function deleteMigrations(){

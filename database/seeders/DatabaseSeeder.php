@@ -3,166 +3,103 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Subject;
-use App\Models\Permission;
-use App\Models\Media;
 use App\Models\Attribute;
+
+//Seeder to create default subjects
 
 class DatabaseSeeder extends Seeder{
 
     public function run(){
-        $actions = array('read','edit','create','delete','edit-self','delete-self','read-self');
-        $subjects = array();
 
-        $admin = Role::factory()->create();
-        $public = Role::factory()->create([
-            'name' => 'Public',
-            'description' => 'Diese Rolle steht für jeden nicht authentifizierten Benutzer',
-            'admin' => false,
-        ]);
-
-        // $media = Subject::factory()->create([
-        //     'displayName' => 'Media Library',
-        //     'type' => 'media',
-        //     'editable' => false,
-        //     'model' => 'Media',
-        //     'table' => 'media'
-        // ]);
-
-        $permissions = Subject::factory()->create([
+        $permissions = Subject::create([
             'displayName' => 'Permissions',
             'type' => 'auth',
-            'model' => 'TestPermission',
-            'table' => 'test_permissions',
+            'model' => 'Permission',
             'editable' => false
         ]);
 
-        $roles = Subject::factory() -> create([
+        $roles = Subject::create([
             'displayName' => 'Rollen',
-            'model' => 'TestRole',
+            'model' => 'Role',
             'editable' => false,
             'type' => 'auth',
-            'table' => 'test_roles'
         ]);
 
-        $users = Subject::factory() -> create([
+        $users = Subject::create([
             'displayName' => 'Benutzer',
             'type' => 'auth',
             'authenticatable' => true,
             'editable' => false,
-            'model' => 'TestUser',
-            'table' => 'test_users'
+            'model' => 'Users',
         ]);
 
-        $content = Subject::factory() -> create([
+        $content = Subject::create([
             'displayName' => 'Content Manager',
             'type' => 'subject',
             'editable' => false,
             'model' => 'Subject',
-            'table' => 'subjects'
         ]);
 
-        array_push($subjects,$roles,$users,$content,$permissions);
+        //Attributes for user
 
-        foreach($subjects as $subject){
-            foreach($actions as $action){
-                Permission::factory()->create([
-                    'action'=>$action,
-                    'role_id'=>$admin->id,
-                    'subject_id'=>$subject->id
-                ]);
-
-                if($subject->path==='media'){
-                    if($action === 'read'){
-                        Permission::factory()->create([
-                            'action'=>$action,
-                            'role_id'=>$public->id,
-                            'subject_id'=>$subject->id,
-                        ]);
-                    };
-                }
-
-                if($subject->path==='roles'){
-                    if($action === 'read-self'){
-                        Permission::factory()->create([
-                            'action'=>$action,
-                            'role_id'=>$public->id,
-                            'subject_id'=>$subject->id
-                        ]);
-                    }
-                }
-            }
-        }
-
-        $user = User::factory()->create([
-            'name'=> 'Simon Weckler',
-            'email' => 'simon.weckler@mnet-online.de',
-            'password' => Hash::make('isgMidv1.12'),
-        ]);
-
-
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'name',
             'type' => 'string',
-            'required' => true,
             'subject_id' => $users->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'email',
             'type' => 'string',
-            'required' => true,
             'unique' => true,
             'subject_id' => $users->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'password',
             'type' => 'password',
-            'required' => true,
             'subject_id' => $users->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'role_id',
             'type' => 'relation',
-            'required' => true,
             'relation' => $roles->id,
             'relation_type' => 'hasOne',
             'subject_id' => $users->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'rememberToken',
             'type' => 'rememberToken',
             'subject_id' => $users->id,
-            'required' => true,
+            'required' => false,
         ]);
 
-        Attribute::factory()->create([
+        //Attributes of role
+
+        Attribute::create([
             'name' => 'name',
             'type' => 'string',
-            'required' => true,
             'subject_id' => $roles->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'description',
+            'required' => false,
             'type' => 'string',
             'subject_id' => $roles->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'admin',
-            'required' => true,
+            'default' => "false",
             'type' => 'boolean',
             'subject_id' => $roles->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'permissions',
             'type' => 'relation',
             'relation' => $permissions->id,
@@ -170,7 +107,7 @@ class DatabaseSeeder extends Seeder{
             'subject_id' => $roles->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'users',
             'type' => 'relation',
             'relation' => $users->id,
@@ -178,26 +115,25 @@ class DatabaseSeeder extends Seeder{
             'subject_id' => $roles->id
         ]);
 
-        Attribute::factory()->create([
+        //Attributes of permission
+
+        Attribute::create([
             'name' => 'action',
             'type' => 'string',
-            'required' => true,
             'subject_id' => $permissions->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'role_id',
             'type' => 'relation',
-            'required' => true,
             'relation' => $roles->id,
             'relation_type' => 'belongsTo',
             'subject_id' => $permissions->id
         ]);
 
-        Attribute::factory()->create([
+        Attribute::create([
             'name' => 'subject_id',
             'type' => 'relation',
-            'required' => true,
             'relation' => $content->id,
             'relation_type' => 'belongsTo',
             'subject_id' => $permissions->id

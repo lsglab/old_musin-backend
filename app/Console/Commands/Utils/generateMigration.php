@@ -10,8 +10,7 @@ class GenerateMigration {
         $table = $subject->table;
         $className = GenerateMigration::generateClassName($subject->table);
 
-        return "
-        <?php
+        return "<?php
 
         use Illuminate\Database\Migrations\Migration;
         use Illuminate\Database\Schema\Blueprint;
@@ -75,7 +74,7 @@ class GenerateMigration {
                 case 'relation':
 
                     $foreign = Subject::where('id',$attribute->relation)->first();
-                    $name = strtolower($foreign->table)."_id";
+                    $name = strtolower($foreign->model)."_id";
 
                     switch($attribute->relation_type)
                     {
