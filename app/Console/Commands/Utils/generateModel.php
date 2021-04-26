@@ -2,21 +2,20 @@
 namespace App\Console\Commands\Utils;
 
 use App\Models\Subject;
-use Illuminate\Support\Str;
 
 class GenerateModel {
 
     public static function run($subject){
 
-        $fields = GenerateModel::getFields($subject);
+        $fields = self::getFields($subject);
         $fillable = $fields[0];
         $hidden = $fields[1];
 
-        $relations = GenerateModel::getRelations($subject);
+        $relations = self::getRelations($subject);
         $uses = $relations[0];
         $functions = $relations[1];
 
-        $attributes = GenerateModel::getDefaults($subject);
+        $attributes = self::getDefaults($subject);
 
         $extends = "Model";
 
@@ -54,14 +53,16 @@ class GenerateModel {
         foreach($subject->attributes as $attribute){
             $string = "";
 
-            if($attribute->type === 'relation'){
+            if($attribute->relation_type === 'hasMany'){
                 continue;
             }
 
             if($attribute->type === 'password' || $attribute->type === 'rememberToken'){
                 $string = $string."'$attribute->name'".',';
                 $hidden = $hidden.$string;
-            } else {
+            }
+
+            if($attribute->type !== 'rememberToken'){
                 $string = $string."'$attribute->name'".',';
                 $fillable = $fillable.$string;
             }
@@ -72,26 +73,60 @@ class GenerateModel {
 
     public static function getRelations($subject){
         $functions = "//relationships: \n";
-        $uses = "//models used: \n";
+        $uses = array();
 
         foreach($subject->attributes as $attribute){
             if($attribute->type === 'relation'){
                 $foreign = Subject::where('id',$attribute->relation)->first();
 
-                $functionName = $foreign->table;
+                $inFunction = "$foreign->model::class";
 
-                $function = "public function $functionName(){
-                    \$this->$attribute->relation_type($foreign->model::class);
+                if($attribute->relation_type === 'belongsTo'){
+                    $inFunction = $inFunction.",'$attribute->name'";
+                }
+
+                $function = "public function $attribute->function_name(){
+                    return \$this->$attribute->relation_type($inFunction);
                 } \n \n";
 
                 $use = "use App\Models\generated\\$foreign->model; \n";
 
+                if(self::searchForModel($foreign->model) !== false){
+                    $use = "use App\Models\\$foreign->model; \n";
+                }
+
+                if($foreign->id === $subject->id){
+                    $use = "//own model; \n";
+                }
+
                 $functions = $functions.$function;
-                $uses = $uses.$use;
+
+                if(!in_array($use,$uses)){
+                    array_push($uses,$use);
+                };
             }
         }
 
+        if(count($uses) > 0){
+            $uses = implode('',$uses);
+        } else {
+            $uses = "//models used";
+        }
+
         return array($uses,$functions);
+    }
+
+    public static function searchForModel($model){
+        $finder = new ClassFinder();
+        $classes = $finder->getClassesInFolder('app/Models');
+
+        foreach($classes as $class){
+            if($class === "App\Models\\$model"){
+                return "App\Models\\$model";
+            }
+        }
+
+        return false;
     }
 
     public static function getDefaults($subject){
@@ -120,6 +155,8 @@ class GenerateModel {
                     case 'integer':
                         $value = $default === false ? 0 : intval($default);
                         break;
+                    case 'rememberToken':
+                        continue 2;
                     case 'relation':
                         $value = $default === false ? 0 : $default;
                         break;

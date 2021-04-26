@@ -20,6 +20,8 @@ class CreateAttributesTable extends Migration
             $table->string("type");
             $table->boolean("required");
             $table->boolean("unique");
+            $table->boolean("identifier");
+            $table->string("function_name")->nullable();
             $table->string("default")->nullable();
             $table->integer("relation")->nullable();
             $table->string("relation_type")->nullable();

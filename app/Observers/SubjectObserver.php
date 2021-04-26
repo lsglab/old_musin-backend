@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Subject;
+use App\Models\Attribute;
 
 class SubjectObserver
 {
@@ -27,7 +28,16 @@ class SubjectObserver
      */
     public function created(Subject $subject)
     {
-        //
+        $users = Subject::where("model","User")->first();
+
+        Attribute::create([
+            'name' => 'creator_id',
+            'type' => 'relation',
+            'function_name' => 'created_by',
+            'relation_type' => 'belongsTo',
+            'relation' => $users->id,
+            'subject_id' => $subject->id
+        ]);
     }
 
     /**

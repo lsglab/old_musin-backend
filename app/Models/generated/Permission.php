@@ -4,26 +4,30 @@
 
         use Illuminate\Database\Eloquent\Factories\HasFactory;
         use Illuminate\Database\Eloquent\Model;
-        //models used: 
+        use App\Models\User; 
 use App\Models\generated\Role; 
-use App\Models\generated\Subject; 
+use App\Models\Subject; 
 
 
         class Permission extends Model
         {
             use HasFactory;
 
-            protected $fillable = ['action',];
+            protected $fillable = ['creator_id','action','role_id','subject_id',];
             protected $hidden = [];
             protected $attributes = [];
 
             //relationships: 
+public function created_by(){
+                    return $this->belongsTo(User::class,'creator_id');
+                } 
+ 
 public function roles(){
-                    $this->belongsTo(Role::class);
+                    return $this->belongsTo(Role::class,'role_id');
                 } 
  
 public function subjects(){
-                    $this->belongsTo(Subject::class);
+                    return $this->belongsTo(Subject::class,'subject_id');
                 } 
  
 

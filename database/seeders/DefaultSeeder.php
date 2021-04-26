@@ -28,50 +28,71 @@ class DefaultSeeder extends Seeder
             'name' => 'Admin',
             'description' => 'Die Admin Rolle hat alle Berechtigungen',
             'admin' => true,
+            'creator_id' => 1,
         ]);
 
         $public = Role::create([
             'name' => 'Public',
             'description' => 'Diese Rolle steht für jeden nicht authentifizierten Benutzer',
             'admin' => false,
+            'creator_id' => 1,
         ]);
-
-        foreach($subjects as $subject){
-            foreach($actions as $action){
-                Permission::create([
-                    'action'=>$action,
-                    'role_id'=>$admin->id,
-                    'subject_id'=>$subject->id
-                ]);
-
-                if($subject->path==='media'){
-                    if($action === 'read'){
-                        Permission::create([
-                            'action'=>$action,
-                            'role_id'=>$public->id,
-                            'subject_id'=>$subject->id,
-                        ]);
-                    };
-                }
-
-                if($subject->path==='roles'){
-                    if($action === 'read-self'){
-                        Permission::create([
-                            'action'=>$action,
-                            'role_id'=>$public->id,
-                            'subject_id'=>$subject->id
-                        ]);
-                    }
-                }
-            }
-        }
 
         $user = User::create([
             'name'=> 'Simon Weckler',
             'email' => 'simon.weckler@mnet-online.de',
             'password' => Hash::make('isgMidv1.12'),
-            'role_id' => $admin->id
+            'role_id' => $admin->id,
+            'creator_id' => 1,
         ]);
+
+        $user2 = User::create([
+            'name' => 'Public',
+            'email' => 'public@lsg.de',
+            'password' => '',
+            'role_id' => $admin->id,
+            'creator_id' => $user->id
+        ]);
+
+        foreach($subjects as $subject){
+            foreach($actions as &$action){
+                //if($subject->model != 'User' || $action != 'read'){
+                    Permission::create([
+                        'action'=>$action,
+                        'role_id'=>$admin->id,
+                        'subject_id'=>$subject->id,
+                        'creator_id' => $user->id
+                    ]);
+                //}
+
+                if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create' || $subject->model === "Permission" && $action === 'edit'){
+                     Permission::create([
+                        'action' => $action,
+                        'role_id' => $public->id,
+                        'subject_id' => $subject->id,
+                        'creator_id' => $user->id
+                     ]);
+                }
+
+                if($subject->model === 'Role' && $action === 'read' || $subject->model === 'Role' && $action === 'edit'){
+                     Permission::create([
+                         'action' => $action,
+                         'role_id'=> $public->id,
+                         'subject_id' => $subject->id,
+                        'creator_id' => $user->id
+                     ]);
+                }
+
+                if($subject->model === 'User' && $action === 'read' || $subject->model === 'User' && $action === 'create' || $subject->model === 'User' && $action === 'delete'){
+                    Permission::create([
+                        'action' => $action,
+                        'role_id' => $public->id,
+                        'subject_id' => $subject->id,
+                        'creator_id' => $user->id
+                    ]);
+                }
+            }
+        }
 
     }
 }

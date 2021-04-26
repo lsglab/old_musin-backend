@@ -7,8 +7,10 @@ use JWTAuth;
 use Exception;
 use Tymon\JWTAuth\Http\Middleware\BaseMiddleware;
 use App\Models\Subject;
-use App\Models\Role;
-use App\Models\Permission;
+use App\Models\User;
+use App\Models\generated\Role;
+use App\Models\generated\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class JwtMiddleware extends BaseMiddleware
 {
@@ -49,7 +51,11 @@ class JwtMiddleware extends BaseMiddleware
                     return $this->respond(['message' => 'token_expired'],403);
                 }
             }else{
-                $roleId = $this->getRole('public')->id;
+                // login the public user; This way it doesnt matter whether the user or public sends
+                // a request the user can always be retrieved with auth()->user();
+                $user = User::where('email','public@lsg.de')->first();
+                Auth::login($user);
+                $roleId = $user->role_id;
             }
         }
 
@@ -75,7 +81,7 @@ class JwtMiddleware extends BaseMiddleware
             }
         }
 
-        $request->merge(['permission' => $permission->action]);
+        $request->merge(['userPermission' => $permission->action]);
 
         return $next($request);
     }
@@ -94,7 +100,7 @@ class JwtMiddleware extends BaseMiddleware
             case 'PUT':
                 return 'edit';
                 break;
-            case `DELETE`:
+            case 'DELETE':
                 return 'delete';
                 break;
         }
@@ -110,7 +116,7 @@ class JwtMiddleware extends BaseMiddleware
     //retrieve the subject by path
     //since the path must be unqiue only one result can be returned
     function getSubject($path){
-        return Subject::where('path',$path)->first();
+        return Subject::where('table',$path)->first();
     }
 
     //retrive a role by its name

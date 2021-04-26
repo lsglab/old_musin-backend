@@ -18,17 +18,22 @@ class Attribute extends Model
         'relation',
         'relation_type',
         'enum',
+        'function_name',
         'unique',
-        'subject_id'
+        'id',
+        'subject_id',
+        'identifier',
     ];
 
     protected $attributes = [
+        'function_name' => null,
         'required' => true,
         'default' => null,
         'unique' => false,
         'relation' => null,
         'relation_type' => null,
-        'enum' => null
+        'enum' => null,
+        'identifier' => false,
     ];
 
     function subject(){

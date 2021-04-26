@@ -15,9 +15,11 @@
             {
                 Schema::create('permissions', function (Blueprint $table) {
                         $table->id();
-                    			$table->string('action');
-			$table->foreignId('role_id')->constrained();
-			$table->foreignId('subject_id')->constrained();
+                    			$table->integer('creator_id');
+			$table->string('action');
+			$table->foreignId('role_id');
+			$table->foreignId('subject_id');
+$table->unique(['action','role_id','subject_id']);
 
                         $table->timestamps();
                 });

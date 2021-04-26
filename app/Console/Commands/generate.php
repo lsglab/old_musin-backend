@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Subject;
 use App\Console\Commands\Utils\GenerateMigration;
 use App\Console\Commands\Utils\GenerateModel;
+use App\Console\Commands\Utils\GenerateController;
 
 class generate extends Command
 {
@@ -53,15 +54,24 @@ class generate extends Command
         $this->generateDirs();
         $this->deleteMigrations();
         $this->deleteModels();
+        $this->deleteControllers();
 
         $subjects = Subject::where('type','!=','subject')->get();
 
-        $subjects = $this->sortMigrations($subjects);
+        //$subjects = $this->sortMigrations($subjects);
 
         foreach($subjects as $i => $subject){
             $this->createMigration($subject,$i);
             $this->createModel($subject);
+            $this->createController($subject);
         }
+    }
+
+    function createController($subject){
+        $fileName = "{$subject->model}Controller";
+
+        $file = GenerateController::run($subject);
+        $this->writeToFile($fileName,'controllers',$file);
     }
 
     function createModel($subject){
@@ -79,6 +89,14 @@ class generate extends Command
 
         $file = GenerateMigration::run($subject);
         $this->writeToFile($fileName,'migrations',$file);
+    }
+
+    function deleteControllers(){
+        $path = $this->getDirectoryPath('controllers')."*.php";
+        $files = glob($path);
+        foreach($files as $file){
+            unlink($file);
+        }
     }
 
     function deleteMigrations(){
@@ -109,7 +127,11 @@ class generate extends Command
             foreach($array as $currentIndex => $subject){
 
                 $attributes = $subject->attributes->filter(function($value,$key){
-                    return $value->relation_type === 'hasOne' || $value->relation_type === 'belongsTo';
+                    if($value->custom_primary_key == false){
+                        return $value->relation_type === 'hasOne' || $value->relation_type === 'belongsTo';
+                    } else {
+                        return false;
+                    }
                 });
 
                 foreach($attributes as $attribute){

@@ -11,6 +11,13 @@ use App\Models\Attribute;
 class DatabaseSeeder extends Seeder{
 
     public function run(){
+        $users = Subject::create([
+            'displayName' => 'Benutzer',
+            'type' => 'auth',
+            'authenticatable' => true,
+            'editable' => false,
+            'model' => 'User',
+        ]);
 
         $permissions = Subject::create([
             'displayName' => 'Permissions',
@@ -24,14 +31,6 @@ class DatabaseSeeder extends Seeder{
             'model' => 'Role',
             'editable' => false,
             'type' => 'auth',
-        ]);
-
-        $users = Subject::create([
-            'displayName' => 'Benutzer',
-            'type' => 'auth',
-            'authenticatable' => true,
-            'editable' => false,
-            'model' => 'Users',
         ]);
 
         $content = Subject::create([
@@ -51,7 +50,7 @@ class DatabaseSeeder extends Seeder{
 
         Attribute::create([
             'name' => 'email',
-            'type' => 'string',
+            'type' => 'email',
             'unique' => true,
             'subject_id' => $users->id
         ]);
@@ -66,7 +65,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'role_id',
             'type' => 'relation',
             'relation' => $roles->id,
-            'relation_type' => 'hasOne',
+            'relation_type' => 'belongsTo',
             'subject_id' => $users->id
         ]);
 
@@ -108,7 +107,7 @@ class DatabaseSeeder extends Seeder{
         ]);
 
         Attribute::create([
-            'name' => 'users',
+            'name' => 'role_id',
             'type' => 'relation',
             'relation' => $users->id,
             'relation_type' => 'hasMany',
@@ -119,7 +118,9 @@ class DatabaseSeeder extends Seeder{
 
         Attribute::create([
             'name' => 'action',
-            'type' => 'string',
+            'type' => 'enum',
+            'enum' => 'read,read-self,edit,edit-self,delete,delete-self,create',
+            'identifier' => true,
             'subject_id' => $permissions->id
         ]);
 
@@ -128,12 +129,14 @@ class DatabaseSeeder extends Seeder{
             'type' => 'relation',
             'relation' => $roles->id,
             'relation_type' => 'belongsTo',
+            'identifier' => true,
             'subject_id' => $permissions->id
         ]);
 
         Attribute::create([
             'name' => 'subject_id',
             'type' => 'relation',
+            'identifier' => true,
             'relation' => $content->id,
             'relation_type' => 'belongsTo',
             'subject_id' => $permissions->id

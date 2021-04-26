@@ -4,44 +4,25 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Models\Role;
-use App\Models\Subject;
-use App\Models\Permission;
-use App\Http\Controllers\MainController;
+use App\Models\generated\Role;
+use App\Http\Controllers\generated\RoleController as GeneratedRoleController;
 
 
-class RoleController extends MainController
+class RoleController extends GeneratedRoleController
 {
-    function read(){
-        $id = $this->getInput('id');
-
-        $roles;
-
-        if($id){
-            $roles = Role::where('id',$id)->get();
-        } else {
-            $roles = Role::all();
-        }
-
-        $roles = $this->getPermissions($roles);
-
-        return $this->respond(['roles' => $roles]);
-    }
-
     function read_self(){
-        $id;
+        $query = $this->getQuery();
+        $user = auth()->user();
 
-        if(auth()->user() !== NULL){
-            $id = auth()->user()->role_id;
-        } else {
-            $id = Role::where('name','Public')->first()->id;
+        $builder = Role::where('id',$user->roles->id);
+
+        if($query != false){
+            $builder = $this->queryBuilder($builder,Role::all()[0]);
         }
 
-        $role = Role::where('id',$id)->get();
+        $data = $builder->get();
 
-        $role = $this->getPermissions($role);
-
-        return $this->respond(['roles' => $role]);
+        return $data;
     }
 
     function getPermissions($roles){

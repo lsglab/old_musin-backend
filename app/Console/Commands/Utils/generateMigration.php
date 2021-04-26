@@ -46,6 +46,7 @@ class GenerateMigration {
 
     public static function attributeString($attributes){
         $string = '';
+        $unique = array();
 
         foreach($attributes as $attribute){
 
@@ -68,6 +69,12 @@ class GenerateMigration {
                 case 'password':
                     $part = $part."string('$name')";
                     break;
+                case 'email':
+                    $part = $part."string('$name')";
+                    break;
+                case 'enum':
+                    $part = $part."string('$name')";
+                    break;
                 case 'rememberToken':
                     $part = $part."rememberToken()";
                     break;
@@ -76,16 +83,14 @@ class GenerateMigration {
                     $foreign = Subject::where('id',$attribute->relation)->first();
                     $name = strtolower($foreign->model)."_id";
 
-                    switch($attribute->relation_type)
-                    {
-                        case 'hasOne':
-                            $part = $part."foreignId('$name')->constrained()";
-                            break;
-                        case 'belongsTo':
-                            $part = $part."foreignId('$name')->constrained()";
-                            break;
-                        default:
-                            continue 3;
+                    if($attribute->relation_type == 'belongsTo'){
+                        if($attribute->name === $name){
+                            $part = $part."foreignId('$name')";
+                        } else {
+                            $part = $part."integer('$attribute->name')";
+                        }
+                    } else {
+                        continue 2;
                     }
 
                     break;
@@ -101,8 +106,18 @@ class GenerateMigration {
                 $part = $part."->nullable()";
             }
 
+            if($attribute->identifier == true){
+                array_push($unique,"'$name'");
+            }
+
+
             $part = $part.";\n";
             $string = $string.$part;
+        }
+
+        if(count($unique) > 0){
+            $implode = implode(',',$unique);
+            $string = $string."\$table->unique([$implode]);\n";
         }
 
         return $string;
