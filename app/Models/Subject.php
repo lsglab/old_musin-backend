@@ -38,11 +38,19 @@ class Subject extends Model
     }
 
     // every subject has multiple permissions
-    public function permission(){
+    public function permissions(){
         return $this->hasMany(Permission::class);
     }
 
     public function attributes(){
         return $this->hasMany(Attribute::class);
+    }
+
+    public function children(){
+        return $this->hasMany(Subject::class,'parent_id');
+    }
+
+    public function createdBy(){
+        return $this->belongsTo(User::class,'creator_id');
     }
 }

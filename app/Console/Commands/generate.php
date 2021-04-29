@@ -56,7 +56,7 @@ class generate extends Command
         $this->deleteModels();
         $this->deleteControllers();
 
-        $subjects = Subject::where('type','!=','subject')->get();
+        $subjects = Subject::where('type','!=','content-manager')->get();
 
         //$subjects = $this->sortMigrations($subjects);
 
@@ -128,7 +128,7 @@ class generate extends Command
 
                 $attributes = $subject->attributes->filter(function($value,$key){
                     if($value->custom_primary_key == false){
-                        return $value->relation_type === 'hasOne' || $value->relation_type === 'belongsTo';
+                        return $value->relation_type === 'has_one' || $value->relation_type === 'belongs_to';
                     } else {
                         return false;
                     }

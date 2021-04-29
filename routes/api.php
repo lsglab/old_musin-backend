@@ -2,16 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-//use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
-//use App\Http\Controllers\RoleController;
-//use App\Http\Controllers\SubjectController;
-//use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\SubjectController;
 use App\Models\Subject;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
-//use App\Http\Controllers\DatabaseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +22,7 @@ use App\Http\Controllers\PermissionController;
 
 Route::post('login',[AuthController::class,'authenticate']);
 
-Route::group(['middleware' => ['jwt.verify']],function(){
+Route::group(['middleware' => ['permission']],function(){
     $verbs = ['post','get','put','delete'];
 
     Route::match($verbs,'/users',[UserController::class,'handle']);
@@ -39,5 +35,7 @@ Route::group(['middleware' => ['jwt.verify']],function(){
 
     //Route::match($verbs,'subjects',[SubjectController::class,'handle']);
 });
+
+Route::get('subjects',[SubjectController::class,'handleRead']);
 
 

@@ -65,7 +65,7 @@ class DefaultSeeder extends Seeder
                     ]);
                 //}
 
-                if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create' || $subject->model === "Permission" && $action === 'edit'){
+                if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create'){
                      Permission::create([
                         'action' => $action,
                         'role_id' => $public->id,
@@ -74,22 +74,13 @@ class DefaultSeeder extends Seeder
                      ]);
                 }
 
-                if($subject->model === 'Role' && $action === 'read' || $subject->model === 'Role' && $action === 'edit'){
+                if($subject->model === 'Role' && $action === 'read'){
                      Permission::create([
                          'action' => $action,
                          'role_id'=> $public->id,
                          'subject_id' => $subject->id,
                         'creator_id' => $user->id
                      ]);
-                }
-
-                if($subject->model === 'User' && $action === 'read' || $subject->model === 'User' && $action === 'create' || $subject->model === 'User' && $action === 'delete'){
-                    Permission::create([
-                        'action' => $action,
-                        'role_id' => $public->id,
-                        'subject_id' => $subject->id,
-                        'creator_id' => $user->id
-                    ]);
                 }
             }
         }

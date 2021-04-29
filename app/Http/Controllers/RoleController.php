@@ -17,7 +17,7 @@ class RoleController extends GeneratedRoleController
         $builder = Role::where('id',$user->roles->id);
 
         if($query != false){
-            $builder = $this->queryBuilder($builder,Role::all()[0]);
+            $builder = $this->queryBuilder($builder,'roles');
         }
 
         $data = $builder->get();

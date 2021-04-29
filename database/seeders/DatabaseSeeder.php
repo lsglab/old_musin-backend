@@ -14,30 +14,46 @@ class DatabaseSeeder extends Seeder{
         $users = Subject::create([
             'displayName' => 'Benutzer',
             'type' => 'auth',
+            'creator_id' => 1,
             'authenticatable' => true,
             'editable' => false,
             'model' => 'User',
         ]);
 
+        $roles = Subject::create([
+            'displayName' => 'Rollen',
+            'model' => 'Role',
+            'creator_id' => 1,
+            'editable' => false,
+            'type' => 'auth',
+        ]);
+
         $permissions = Subject::create([
             'displayName' => 'Permissions',
             'type' => 'auth',
+            'creator_id' => 1,
+            'parent_id' => $roles->id,
             'model' => 'Permission',
             'editable' => false
         ]);
 
-        $roles = Subject::create([
-            'displayName' => 'Rollen',
-            'model' => 'Role',
-            'editable' => false,
-            'type' => 'auth',
-        ]);
-
         $content = Subject::create([
             'displayName' => 'Content Manager',
-            'type' => 'subject',
+            'type' => 'content-manager',
             'editable' => false,
+            'creator_id' => 1,
             'model' => 'Subject',
+            'table' => 'content-manager'
+        ]);
+
+        $attributes = Subject::create([
+            'displayName' => 'Attributes',
+            'type' => 'content-manager',
+            'parent_id' => $content->id,
+            'creator_id' => 1,
+            'editable' => false,
+            'model' => 'Attribute',
+            'table' => 'attributes'
         ]);
 
         //Attributes for user
@@ -65,7 +81,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'role_id',
             'type' => 'relation',
             'relation' => $roles->id,
-            'relation_type' => 'belongsTo',
+            'relation_type' => 'belongs_to',
             'subject_id' => $users->id
         ]);
 
@@ -102,7 +118,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'permissions',
             'type' => 'relation',
             'relation' => $permissions->id,
-            'relation_type' => 'hasMany',
+            'relation_type' => 'has_many',
             'subject_id' => $roles->id
         ]);
 
@@ -110,7 +126,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'role_id',
             'type' => 'relation',
             'relation' => $users->id,
-            'relation_type' => 'hasMany',
+            'relation_type' => 'has_many',
             'subject_id' => $roles->id
         ]);
 
@@ -128,7 +144,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'role_id',
             'type' => 'relation',
             'relation' => $roles->id,
-            'relation_type' => 'belongsTo',
+            'relation_type' => 'belongs_to',
             'identifier' => true,
             'subject_id' => $permissions->id
         ]);
@@ -138,7 +154,7 @@ class DatabaseSeeder extends Seeder{
             'type' => 'relation',
             'identifier' => true,
             'relation' => $content->id,
-            'relation_type' => 'belongsTo',
+            'relation_type' => 'belongs_to',
             'subject_id' => $permissions->id
         ]);
     }

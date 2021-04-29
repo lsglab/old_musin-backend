@@ -22,28 +22,28 @@ class GenerateModel {
         if($subject->authenticatable == true){
             $extends = "Authenticatable";
             $uses = $uses."
-            use Illuminate\Foundation\Auth\User as Authenticatable; \n
+use Illuminate\Foundation\Auth\User as Authenticatable; \n
             ";
         }
 
         return "<?php
 
-        namespace App\Models\generated;
+namespace App\Models\generated;
 
-        use Illuminate\Database\Eloquent\Factories\HasFactory;
-        use Illuminate\Database\Eloquent\Model;
-        $uses
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+$uses
 
-        class $subject->model extends $extends
-        {
-            use HasFactory;
+class $subject->model extends $extends
+{
+    use HasFactory;
 
-            protected \$fillable = [$fillable];
-            protected \$hidden = [$hidden];
-            protected \$attributes = [$attributes];
+    protected \$fillable = [$fillable];
+    protected \$hidden = [$hidden];
+    protected \$attributes = [$attributes];
 
-            $functions
-        }";
+    $functions
+}";
     }
 
     public static function getFields($subject){
@@ -53,17 +53,17 @@ class GenerateModel {
         foreach($subject->attributes as $attribute){
             $string = "";
 
-            if($attribute->relation_type === 'hasMany'){
+            if($attribute->relation_type === 'has_many'){
                 continue;
             }
 
             if($attribute->type === 'password' || $attribute->type === 'rememberToken'){
-                $string = $string."'$attribute->name'".',';
+                $string = "'$attribute->name'".',';
                 $hidden = $hidden.$string;
             }
 
             if($attribute->type !== 'rememberToken'){
-                $string = $string."'$attribute->name'".',';
+                $string = "'$attribute->name'".',';
                 $fillable = $fillable.$string;
             }
         }
@@ -81,13 +81,25 @@ class GenerateModel {
 
                 $inFunction = "$foreign->model::class";
 
-                if($attribute->relation_type === 'belongsTo'){
+                if($attribute->relation_type === 'belongs_to'){
                     $inFunction = $inFunction.",'$attribute->name'";
                 }
 
-                $function = "public function $attribute->function_name(){
-                    return \$this->$attribute->relation_type($inFunction);
-                } \n \n";
+                $relation_function = '';
+
+                switch($attribute->relation_type){
+                    case 'belongs_to':
+                        $relation_function = 'belongsTo';
+                        break;
+                    case 'has_many':
+                        $relation_function = 'hasMany';
+                        break;
+                }
+
+                $function = "
+                \n\tpublic function $attribute->function_name(){
+        return \$this->$relation_function($inFunction);
+    }";
 
                 $use = "use App\Models\generated\\$foreign->model; \n";
 

@@ -5,16 +5,42 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\generated\Permission;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 
 class MainController extends Controller
 {
     public Request $request;
-    public $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
+    public array $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
+    public string $model;
+    public string $table;
+    public array $createValidation = [];
+    public array $editValidation = [];
+    public array $hidden = [];
 
-    public function handle(Request $request){
-        $this->request = $request;
+    public function __construct(){
+        $this->request = request();
+
+        if(count($this->editValidation) === 0){
+            foreach($this->createValidation as $key => $value){
+                $type = gettype($value);
+
+                if($type === 'string'){
+                    $this->editValidation[$key] = preg_replace("/((?<=\|)|(?<=^))(required)((?=\|)|(?=$))/",'nullable',$value);
+                } else if($type === 'array'){
+                    foreach($value as &$aValue){
+                        if ( $aValue === 'required' ) $aValue='nullable';
+                    }
+                    $this->editValidation[$key] = $value;
+                }
+            }
+        }
+    }
+
+    public function handle(){
         $permission = $this->request->userPermission;
-        unset($request['userPermission']);
+        unset($this->request['userPermission']);
 
         switch($permission){
             case 'read':
@@ -100,9 +126,6 @@ class MainController extends Controller
             array_push($data,$created);
         }
 
-        $print = implode("\n",$data);
-        error_log("ele:$print");
-
         return $this->afterCreate($data);
     }
 
@@ -180,21 +203,48 @@ class MainController extends Controller
         }
     }
 
-    function queryBuilder($builder,$example = null){
+    function getColumns(){
+        $columns = Schema::getColumnListing($this->table);
+        return array_diff($columns,$this->hidden);
+    }
+
+    function queryBuilder($builder = null){
+        if($builder == null){
+            $builder = $this->model::where('id','!=',-1);
+        }
+
         $query = $this->getQuery();
+        $columns = $this->getColumns();
+
+        if(!$query){
+            return $builder;
+        }
 
         foreach($query as $key => $value){
             if($key==='search'){
-                if($example == null) continue;
-
-                $builder = $builder->where(function($query) use ($example,$value){
-                    foreach($example->toArray() as $modelKey => $modelValue){
-                        $query = $query->orWhere($modelKey,'like','%'.$value.'%');
+                $builder = $builder->where(function($query) use ($columns,$value){
+                    foreach($columns as $column){
+                        $query = $query->orWhere($column,'like','%'.$value.'%');
                     }
                 });
 
-            } else{
+            } else if($key === 'orderBy'){
+                $split = explode(',',$value);
+                $method = 'asc';
+                if(count($split) > 1){
+                    $method = $split[1] == 'desc' || $split[1] == 'asc' ? $split[1] : $method;
+                }
+                $column = $split[0];
+
+                if(in_array($column,$columns)){
+                    $builder->orderBy($column,$method);
+                }
+            }
+            else if(in_array($key,$columns)){
                 $builder = $builder->where($key,$value);
+            } else {
+                //just add a query that always fails -> empty array is returned
+                $builder = $builder->where('id',-1);
             }
         }
 
@@ -222,7 +272,56 @@ class MainController extends Controller
     }
 
     function processDataAndRespond($data){
-        return $this->respond(['data' => $data]);
+        return $this->respond([$this->table => $data]);
+    }
+
+    function getRelation($data,$relation,$controller){
+        $roleId = auth()->user()->role_id;
+
+        if($this->getPermission($roleId,1,'read') !== false){
+            $data->$relation;
+        } else if($this->getPermission($roleId,1,'read-self') !== false){
+
+            $foreignClass = new $controller;
+            $self = $foreignClass->read_self();
+            $return = $this->getEqualObjects($data->$relation,$self);
+
+            unset($data->$relation);
+            $data->$relation = $return;
+        } else {
+            $data->$relation = array();
+        }
+
+        return $data;
+    }
+
+    function read(){
+        $query = $this->getQuery();
+
+        if(!$query){
+            $data = $this->model::all();
+        } else {
+            $builder = $this->queryBuilder();
+
+            $data = $builder->get();
+        }
+
+        return $data;
+    }
+
+    function read_self(){
+        $query = $this->getQuery();
+        $user = auth()->user();
+
+        $builder = $this->model::where('creator_id',$user->id);
+
+        if($query != false){
+            $builder = $this->queryBuilder($builder);
+        }
+
+        $data = $builder->get();
+
+        return $data;
     }
 
     function edit($edit){
@@ -295,11 +394,72 @@ class MainController extends Controller
         return $delete;
     }
 
-    function validate_edit(){
+    function create($create = null){
+        if($create == null){
+            $create = $this->request->all();
+        }
+
+        $validate = $this->validate_create($create);
+
+        if($validate !== true){
+            return $validate;
+        }
+
+        $body = $this->getRequestBody();
+
+
+        $created = $this->createOne($create);
+
+        return $created;
+    }
+
+    function createOne($create){
+        $array = [];
+        $columns = Schema::getColumnListing($this->table);
+
+        foreach($columns as $key => $value){
+            if(array_key_exists($key,$create)){
+                switch($key){
+                    case 'creator_id':
+                        $array[$key] = auth()->user()->id;
+                    case 'password':
+                        $array[$key] = Hash::make($create[$key]);
+                    default:
+                        $array[$key] = $create[$key];
+                }
+            }
+        }
+
+        return $this->model::create($array);
+    }
+
+    function validateRequest($validation,$object = null){
+        if($object == null){
+            $object = $this->request->all();
+        }
+
+        $validator = Validator::make($object,$validation);
+
+        if($validator->fails()){
+            return $this->respond($validator->errors(), 400);
+        }
+
         return true;
     }
 
-    function validate_create(){
-        return true;
+    function validate_edit($object = null){
+        if($object == null){
+            $object = $this->request->all();
+        }
+
+        return $this->validateRequest($this->editValidation,$object);
+    }
+
+    function validate_create($object = null){
+        if($object == null){
+            $object = $this->request->all();
+        }
+
+        return $this->validateRequest($this->createValidation,$object);
     }
 }

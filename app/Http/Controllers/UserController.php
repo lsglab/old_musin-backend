@@ -18,7 +18,7 @@ class UserController extends GeneratedUserController
         $builder = User::where('id',$user->id);
 
         if($query != false){
-            $builder = $this->queryBuilder($builder,User::all()[0]);
+            $builder = $this->queryBuilder($builder,'users');
         }
 
         $data = $builder->get();

@@ -8,19 +8,17 @@ class GenerateController {
 
     public static function run($subject){
 
-        $relations = GenerateModel::getRelations($subject);
-        $uses = $relations[0];
+        $uses = "";
 
-        $process = self::getRelations($subject);
-        $processData = $process[0];
-        $uses = $uses.$process[1];
+        $processData = self::getRelations($subject);
 
-        $createValidator = self::makeValidation($subject,false);
-        $editValidator = self::makeValidation($subject,true);
+        $validator = self::makeValidation($subject,false);
+        $createValidator = $validator[0];
+        $uses = $uses.$validator[1];
 
-        $makeCreation = self::makeCreation($subject);
+        /*$makeCreation = self::makeCreation($subject);
         $create = $makeCreation[0];
-        $uses = $uses.$makeCreation[1];
+        $uses = $uses.$makeCreation[1];*/
 
         $model = GenerateModel::searchForModel($subject->model);
 
@@ -28,114 +26,32 @@ class GenerateController {
             $model = "App\Models\generated\\$subject->model";
         }
 
-        $uses = $uses."use $model; \n";
+        $hidden = GenerateModel::getFields($subject)[1];
 
-        $check = self::createDoublesCheck($subject);
 return "<?php
 
 namespace App\Http\Controllers\generated;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\MainController;
 $uses
-
-
 class {$subject->model}Controller extends MainController
 {
-
-    function read(){
-        \$builder = {$subject->model}::where('id','!=',-2);
-        \$query = \$this->getQuery();
-
-        if(!\$query){
-            \$data = {$subject->model}::all();
-        } else {
-            \$builder = \$this->queryBuilder(\$builder,{$subject->model}::all()[0]);
-
-            \$data = \$builder->get();
-        }
-
-        return \$data;
-    }
-
-    function read_self(){
-        \$query = \$this->getQuery();
-        \$user = auth()->user();
-
-        \$builder = {$subject->model}::where('creator_id',\$user->id);
-
-        if(\$query != false){
-            \$builder = \$this->queryBuilder(\$builder,{$subject->model}::all()[0]);
-        }
-
-        \$data = \$builder->get();
-
-        return \$data;
+    public function __construct(){
+        \$this->model = '$model';
+        \$this->table = '$subject->table';
+        \$this->createValidation = [$createValidator
+        ];
+        \$this->hidden = [$hidden];
+        parent::__construct();
     }
 
     function processDataAndRespond(\$array){
-        \$role = auth()->user()->roles;
-
         foreach(\$array as &\$data){
             $processData
         }
 
-        return \$this->respond(['$subject->table' => \$array]);
-    }
-
-    function create(\$create = null){
-        if(\$create == null){
-            \$create = \$this->request->all();
-        }
-
-        \$validate = \$this->validate_create(\$create);
-
-        if(\$validate !== true){
-            return \$validate;
-        }
-
-        \$body = \$this->getRequestBody();
-
-        $check
-        \$created = $subject->model::create([
-            $create
-        ]);
-
-        return \$created;
-    }
-
-    function validate_create(\$object = null){
-        if(\$object == null){
-            \$object = \$this->request->all();
-        }
-
-        \$validator = Validator::make(\$object,[
-            $createValidator
-        ]);
-
-        if(\$validator->fails()){
-            return \$this->respond(\$validator->errors(), 400);
-        }
-
-        return true;
-    }
-
-    function validate_edit(\$object = null){
-        if(\$object == null){
-            \$object = \$this->request->all();
-        }
-
-        \$validator = Validator::make(\$this->request->all(),[
-            $editValidator
-        ]);
-
-        if(\$validator->fails()){
-            return \$this->respond(\$validator->errors(), 400);
-        }
-
-        return true;
+        return \$this->respond([\$this->table => \$array]);
     }
 }";
     }
@@ -143,7 +59,6 @@ class {$subject->model}Controller extends MainController
     public static function getRelations($subject){
 
         $string = '';
-        $uses = array();
 
         foreach($subject->attributes as $attribute){
 
@@ -155,13 +70,13 @@ class {$subject->model}Controller extends MainController
 
             $foreignClassPath = self::searchForController($foreign->model);
             $foreignClassName = "{$foreign->model}Controller";
-            $foreignClassAlias = $foreignClassName;
+            //$foreignClassAlias = $foreignClassName;
 
             if($foreignClassPath === false){
                 $foreignClassPath = "App\Http\Controllers\generated\\";
             }
 
-            if($foreign->id === $subject->id){
+            /*if($foreign->id === $subject->id){
                 $foreignClassAlias = "Manual{$foreign->model}Controller";
             }
 
@@ -172,31 +87,21 @@ class {$subject->model}Controller extends MainController
                 if(!in_array($use,$uses)){
                     array_push($uses,$use);
                 };
-            }
+            }*/
+
+            $controller = $foreignClassPath.$foreignClassName;
 
             $string = $string."
-        \tif(\$this->getPermission(\$role->id,$foreign->id,'read') !== false){
-        \t    \$data->$attribute->function_name;
-        \t} else if(\$this->getPermission(\$role->id,$foreign->id,'read-self') !== false){
-        \t
-        \t    \$foreignClass = new $foreignClassAlias();
-        \t    \$self = \$foreignClass->read_self();
-        \t    \$return = \$this->getEqualObjects(\$data->$attribute->function_name,\$self);
-        \t
-        \t    unset(\$data->$attribute->function_name);
-        \t    \$data->$attribute->function_name = \$return;
-        \t} else {
-              \$data->$attribute->function_name = array();
-        \t}\n";
+            \$data = \$this->getRelation(\$data,'$attribute->function_name','$controller');";
         }
 
-        if(count($uses) > 0){
+        /*if(count($uses) > 0){
             $uses = implode('',$uses);
         } else {
             $uses = "//controllers used";
-        }
+        }*/
 
-        return array($string,$uses);
+        return $string;
     }
 
     public static function searchForController($model){
@@ -215,6 +120,7 @@ class {$subject->model}Controller extends MainController
 
     public static function makeValidation($subject,$nullable){
         $validation = "\n";
+        $uses = array();
 
         foreach($subject->attributes as $attribute){
             $part = array();
@@ -224,41 +130,65 @@ class {$subject->model}Controller extends MainController
             }
 
             if($attribute->required && $nullable === false){
-                array_push($part,"required");
+                array_push($part,"'required'");
             } else {
-                array_push($part,"nullable");
+                array_push($part,"'nullable'");
             }
 
             switch($attribute->type){
                 case "password":
-                    array_push($part,"string","min:8","confirmed");
+                    array_push($uses,"use Illuminate\Validation\Rules\Password;\n");
+                    array_push($part,"'string'","Password::min(8)->letters()->mixedCase()->numbers()->symbols()->uncompromised()","'confirmed'");
                     break;
                 case "relation":
-                    if($attribute->relation_type === 'hasMany' || $attribute->name === 'creator_id'){
+                    if($attribute->relation_type === 'has_many' || $attribute->name === 'creator_id'){
                         continue 2;
                     }
 
                     $foreign = Subject::where('id',$attribute->relation)->first();
-                    array_push($part,"exists:$foreign->table,id");
+                    array_push($part,"'exists:$foreign->table,id'");
                     break;
                 case 'enum':
                     $enum = $attribute->enum;
-                    array_push($part,"in:$enum");
+                    array_push($part,"'in:$enum'");
                     break;
                 default:
-                    array_push($part,$attribute->type);
+                    array_push($part,"'$attribute->type'");
             }
 
             if($attribute->unique){
-                array_push($part,"unique:$subject->table");
+                array_push($part,"'unique:$subject->table'");
             }
 
-            $implode = implode('|',$part);
-            $ele = "\t\t\t'$attribute->name' => '$implode', \n";
+            if($attribute->identifier){
+                $identifiers = $subject->attributes->filter(function($value,$key){
+                    return $value->identifier == true;
+                });
+
+                $use = "use App\Rules\CompositeUnique;\n";
+
+                if(!in_array($use,$uses)){
+                    array_push($uses,$use);
+                }
+
+                $unique = "";
+
+                foreach($identifiers as $identifier){
+                    $unique = $unique."'$identifier->name',";
+                }
+
+                $unique = "new CompositeUnique(\$this->table,[$unique])";
+
+                array_push($part,$unique);
+            }
+
+            $implode = implode(',',$part);
+            $ele = "\t\t\t'$attribute->name' => [$implode], \n";
             $validation = $validation.$ele;
         }
 
-        return $validation;
+        $uses = implode("",$uses);
+        return array($validation,$uses);
     }
 
     public static function makeCreation($subject){
@@ -285,33 +215,5 @@ class {$subject->model}Controller extends MainController
         }
 
         return array($create,$uses);
-    }
-
-    public static function createDoublesCheck($subject){
-        $identifiers = $subject->attributes->filter(function($value,$key){
-            return $value->identifier == true;
-        });
-
-        $wheres = array();
-
-        foreach($identifiers as $identifier){
-            array_push($wheres,"where('$identifier->name',\$this->request->get('$identifier->name')) \n");
-        }
-
-        if(count($identifiers) > 0){
-            $wheres = implode("\t\t\t->",$wheres);
-
-            $check = "
-        \$duplicate = {$subject->model}::{$wheres}\t\t\t->first();
-
-        if(\$duplicate != null){
-            return \$this->respond(['message' => 'entry already exists'],400);
-        }
-        ";
-
-            return $check;
-        } else {
-            return "";
-        }
     }
 }

@@ -19,12 +19,14 @@ class CreateSubjectsTable extends Migration
             $table->string('description');
             $table->string('type');
             $table->boolean('authenticatable');
+            $table->integer('parent_id')->nullable();
             // -> this variable determines whether the subject is editable
             // this is mostly used for native subjects like role or user because
             // they should not be edited once created not even by super admins
             $table->boolean('editable');
             $table->string('model')->unique();
             $table->string('table')->unique();
+            $table->integer('creator_id');
             $table->timestamps();
         });
     }

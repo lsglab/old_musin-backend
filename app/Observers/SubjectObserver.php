@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Subject;
 use App\Models\Attribute;
+include_once __DIR__.'/Helper/helper.php';
 
 class SubjectObserver
 {
@@ -12,6 +13,7 @@ class SubjectObserver
         $table = strtolower($subject->model);
 
         if(!str_ends_with($table,'s')){
+            $table = toSnakeCase($table);
             $table = $table.'s';
         }
 
@@ -34,7 +36,7 @@ class SubjectObserver
             'name' => 'creator_id',
             'type' => 'relation',
             'function_name' => 'created_by',
-            'relation_type' => 'belongsTo',
+            'relation_type' => 'belongs_to',
             'relation' => $users->id,
             'subject_id' => $subject->id
         ]);

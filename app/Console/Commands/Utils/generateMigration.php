@@ -83,7 +83,7 @@ class GenerateMigration {
                     $foreign = Subject::where('id',$attribute->relation)->first();
                     $name = strtolower($foreign->model)."_id";
 
-                    if($attribute->relation_type == 'belongsTo'){
+                    if($attribute->relation_type == 'belongs_to'){
                         if($attribute->name === $name){
                             $part = $part."foreignId('$name')";
                         } else {
