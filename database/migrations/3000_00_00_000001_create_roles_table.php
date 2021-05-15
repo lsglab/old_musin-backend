@@ -14,13 +14,12 @@
             public function up()
             {
                 Schema::create('roles', function (Blueprint $table) {
-                        $table->id();
-                    			$table->integer('creator_id');
-			$table->string('name');
-			$table->string('description')->nullable();
-			$table->boolean('admin');
-
-                        $table->timestamps();
+                    					$table->integer('creator_id');
+					$table->id();
+					$table->timestamps();
+					$table->string('name');
+					$table->string('description')->nullable();
+					$table->boolean('admin')->nullable();
                 });
             }
 

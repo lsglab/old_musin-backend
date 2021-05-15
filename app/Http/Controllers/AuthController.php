@@ -10,6 +10,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Cookie;
 use Illuminate\Http\Response;
+use App\Http\Controllers\Base\Controller;
 
 
 class AuthController extends Controller
@@ -20,10 +21,10 @@ class AuthController extends Controller
 
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'invalid_credentials']);
+                return response()->json(['message' => 'invalid_credentials'],400);
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'could_not_create_token'], 500);
+            return response()->json(['message' => 'could_not_create_token'], 500);
         }
 
         $session = true;

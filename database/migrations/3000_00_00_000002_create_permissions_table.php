@@ -14,14 +14,13 @@
             public function up()
             {
                 Schema::create('permissions', function (Blueprint $table) {
-                        $table->id();
-                    			$table->integer('creator_id');
-			$table->string('action');
-			$table->foreignId('role_id');
-			$table->foreignId('subject_id');
-$table->unique(['action','role_id','subject_id']);
+                    					$table->integer('creator_id');
+					$table->id();
+					$table->timestamps();
+					$table->string('action');
+					$table->foreignId('role_id');
+					$table->foreignId('subject_id');$table->unique(['action','role_id','subject_id']);
 
-                        $table->timestamps();
                 });
             }
 

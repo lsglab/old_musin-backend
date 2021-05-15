@@ -10,6 +10,7 @@ class GenerateModel {
         $fields = self::getFields($subject);
         $fillable = $fields[0];
         $hidden = $fields[1];
+        $casts = $fields[2];
 
         $relations = self::getRelations($subject);
         $uses = $relations[0];
@@ -41,6 +42,7 @@ class $subject->model extends $extends
     protected \$fillable = [$fillable];
     protected \$hidden = [$hidden];
     protected \$attributes = [$attributes];
+    protected \$casts = [$casts];
 
     $functions
 }";
@@ -49,26 +51,42 @@ class $subject->model extends $extends
     public static function getFields($subject){
         $fillable = "";
         $hidden = "";
+        $casts = "";
 
         foreach($subject->attributes as $attribute){
             $string = "";
 
-            if($attribute->relation_type === 'has_many'){
+            if($attribute->relation_type === 'has_many' || $attribute->relation_type === 'polymorphic_has_many'){
                 continue;
             }
 
-            if($attribute->type === 'password' || $attribute->type === 'rememberToken'){
+            if($attribute->hidden == true){
                 $string = "'$attribute->name'".',';
                 $hidden = $hidden.$string;
             }
 
-            if($attribute->type !== 'rememberToken'){
+            if($attribute->type !== 'timestamp' && $attribute->type !== 'id'){
                 $string = "'$attribute->name'".',';
                 $fillable = $fillable.$string;
             }
+
+
+            switch($attribute->type){
+                case 'boolean':
+                    $casts = $casts."'$attribute->name' => 'boolean',";
+                    break;
+                case 'date':
+                case 'timestamp':
+                    //$casts = $casts."'$attribute->name' => 'datetime:Y-m-d h:m',";
+                    break;
+            }
         }
 
-        return array($fillable,$hidden);
+        if($subject->authenticatable){
+            $hidden = $hidden."'remember_token',";
+        }
+
+        return array($fillable,$hidden,$casts);
     }
 
     public static function getRelations($subject){
@@ -79,20 +97,35 @@ class $subject->model extends $extends
             if($attribute->type === 'relation'){
                 $foreign = Subject::where('id',$attribute->relation)->first();
 
-                $inFunction = "$foreign->model::class";
+                $inFunction = "";
 
-                if($attribute->relation_type === 'belongs_to'){
-                    $inFunction = $inFunction.",'$attribute->name'";
+                if($foreign !== null){
+                    $inFunction = "$foreign->model::class";
                 }
 
                 $relation_function = '';
 
                 switch($attribute->relation_type){
                     case 'belongs_to':
+                        $inFunction = $inFunction.",'$attribute->name'";
                         $relation_function = 'belongsTo';
                         break;
                     case 'has_many':
                         $relation_function = 'hasMany';
+                        break;
+                    case 'polymorphic_belongs_to':
+                        $type = array_values($subject->attributes->filter(function($value,$key) use ($attribute){
+                            return explode('_type',$value->name)[0] === $attribute->function_name && $value->type === 'polymorphic_type';
+                        })->all())[0];
+
+                        $inFunction = "__FUNCTION__,'$type->name','$attribute->name'";
+                        $relation_function = 'morphTo';
+                        break;
+                    case 'polymorphic_has_many':
+                        $relation = $foreign->attributes->firstWhere('relation_type','polymorphic_belongs_to');
+
+                        $inFunction = $inFunction.",'$relation->function_name'";
+                        $relation_function = 'morphMany';
                         break;
                 }
 
@@ -101,14 +134,16 @@ class $subject->model extends $extends
         return \$this->$relation_function($inFunction);
     }";
 
-                $use = "use App\Models\generated\\$foreign->model; \n";
+                if($foreign !== null){
+                    $use = "use App\Models\generated\\$foreign->model; \n";
 
-                if(self::searchForModel($foreign->model) !== false){
-                    $use = "use App\Models\\$foreign->model; \n";
-                }
+                    if(self::searchForModel($foreign->model) !== false){
+                        $use = "use App\Models\\$foreign->model; \n";
+                    }
 
-                if($foreign->id === $subject->id){
-                    $use = "//own model; \n";
+                    if($foreign->id === $subject->id){
+                        $use = "//own model; \n";
+                    }
                 }
 
                 $functions = $functions.$function;
@@ -157,23 +192,25 @@ class $subject->model extends $extends
 
                 if($attribute->default != null){
                     $default = $attribute->default;
-                    echo "default $default \n";
                 }
 
                 switch($attribute->type){
                     case 'boolean':
-                        $value = $default === false ? false : boolval($default);
+                        $value = $default === false ? "false" : $default;
                         break;
                     case 'integer':
                         $value = $default === false ? 0 : intval($default);
+                        $value = "$value";
                         break;
                     case 'rememberToken':
                         continue 2;
                     case 'relation':
                         $value = $default === false ? 0 : $default;
+                        $value = "$value";
                         break;
                     case 'date':
                         $value = $default === false ? now() : $default;
+                        $value = "'$value'";
                         break;
                     default:
                         $value = $default === false ? "''" : $default;

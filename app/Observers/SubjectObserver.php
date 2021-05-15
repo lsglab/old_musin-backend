@@ -10,14 +10,13 @@ class SubjectObserver
 {
 
     public function creating(Subject $subject){
-        $table = strtolower($subject->model);
+        $table = toSnakeCase($subject->model);
 
         if(!str_ends_with($table,'s')){
-            $table = toSnakeCase($table);
             $table = $table.'s';
         }
 
-        $subject->table = $table;
+        $subject->table = strtolower($table);
 
         return $subject;
     }
@@ -38,6 +37,24 @@ class SubjectObserver
             'function_name' => 'created_by',
             'relation_type' => 'belongs_to',
             'relation' => $users->id,
+            'subject_id' => $subject->id
+        ]);
+
+        Attribute::create([
+            'name' => 'id',
+            'type' => 'id',
+            'subject_id' => $subject->id
+        ]);
+
+        Attribute::create([
+            'name' => 'created_at',
+            'type' => 'timestamp',
+            'subject_id' => $subject->id
+        ]);
+
+        Attribute::create([
+            'name' => 'updated_at',
+            'type' => 'timestamp',
             'subject_id' => $subject->id
         ]);
     }

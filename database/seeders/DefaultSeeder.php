@@ -8,6 +8,8 @@ use App\Models\generated\Permission;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Subject;
+use App\Console\Commands\Utils\ClassFinder;
+use App\Models\generated\EntryPermission;
 
 //This Seeder is used for default data like the admin user and role;
 
@@ -65,16 +67,16 @@ class DefaultSeeder extends Seeder
                     ]);
                 //}
 
-                if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create'){
+                /*if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create'){
                      Permission::create([
                         'action' => $action,
                         'role_id' => $public->id,
                         'subject_id' => $subject->id,
                         'creator_id' => $user->id
                      ]);
-                }
+                }*/
 
-                if($subject->model === 'Role' && $action === 'read'){
+                if($subject->model === 'Role' && $action === 'read-self'){
                      Permission::create([
                          'action' => $action,
                          'role_id'=> $public->id,
@@ -84,6 +86,25 @@ class DefaultSeeder extends Seeder
                 }
             }
         }
+
+        /*foreach($subjects as $subject){
+            foreach($actions as &$action){
+                if($action === 'read' || $action === 'edit' || $action === 'delete'){
+                    echo "action $action";
+                    $finder = new ClassFinder();
+                    $path = $finder->searchForModel($subject->model);
+                    foreach($path::get() as $entry){
+                        EntryPermission::create([
+                            'action' => $action,
+                            'role_id' => $admin->id,
+                            'subject_id' => $subject->id,
+                            'creator_id' => $user->id,
+                            'entry_id' => $entry->id
+                        ]);
+                    }
+                }
+            }
+        }*/
 
     }
 }

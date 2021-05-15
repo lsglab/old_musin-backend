@@ -7,16 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User; 
 use App\Models\generated\Role; 
 use App\Models\Subject; 
-use App\Models\generated\EntryPermission; 
+//own model; 
 
 
-class Permission extends Model
+class EntryPermission extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['creator_id','action','role_id','subject_id',];
-    protected $hidden = [];
-    protected $attributes = [];
+    protected $fillable = ['creator_id','action','role_id','subject_id','entry_type','entry_id',];
+    protected $hidden = ['entry_type',];
+    protected $attributes = ['entry_type' => '', 
+];
     protected $casts = [];
 
     //relationships: 
@@ -32,6 +33,10 @@ class Permission extends Model
                 
 	public function subject(){
         return $this->belongsTo(Subject::class,'subject_id');
+    }
+                
+	public function entry(){
+        return $this->morphTo(__FUNCTION__,'entry_type','entry_id');
     }
                 
 	public function entry_permissions(){

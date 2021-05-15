@@ -8,6 +8,7 @@ use App\Models\Subject;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\EntryPermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,9 @@ use App\Http\Controllers\PermissionController;
 |
 */
 
-Route::post('login',[AuthController::class,'authenticate']);
+Route::post('auth/login',[AuthController::class,'authenticate']);
+Route::get('auth/logout',[AuthController::class,'logout']);
+Route::get('auth/user',[AuthController::class,'getAuthenticatedUser']);
 
 Route::group(['middleware' => ['permission']],function(){
     $verbs = ['post','get','put','delete'];
@@ -28,14 +31,12 @@ Route::group(['middleware' => ['permission']],function(){
     Route::match($verbs,'/users',[UserController::class,'handle']);
     Route::match($verbs,'/roles',[RoleController::class,'handle']);
     Route::match($verbs,'/permissions',[PermissionController::class,'handle']);
-
-    //Route::match($verbs,'/user',[UserController::class,'handle']);
-
-    //Route::match($verbs,'/roles',[RoleController::class,'handle']);
-
-    //Route::match($verbs,'subjects',[SubjectController::class,'handle']);
+    Route::match($verbs,'/entry_permissions',[EntryPermissionController::class,'handle']);
 });
 
-Route::get('subjects',[SubjectController::class,'handleRead']);
+Route::get('subjects',function(){
+    $controller = new SubjectController;
+    return $controller->handle('read');
+});
 
 

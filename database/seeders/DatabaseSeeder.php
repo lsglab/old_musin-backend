@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder{
 
     public function run(){
         $users = Subject::create([
-            'displayName' => 'Benutzer',
+            'name' => 'Benutzer',
             'type' => 'auth',
             'creator_id' => 1,
             'authenticatable' => true,
@@ -21,24 +21,15 @@ class DatabaseSeeder extends Seeder{
         ]);
 
         $roles = Subject::create([
-            'displayName' => 'Rollen',
+            'name' => 'Rollen',
             'model' => 'Role',
             'creator_id' => 1,
             'editable' => false,
             'type' => 'auth',
         ]);
 
-        $permissions = Subject::create([
-            'displayName' => 'Permissions',
-            'type' => 'auth',
-            'creator_id' => 1,
-            'parent_id' => $roles->id,
-            'model' => 'Permission',
-            'editable' => false
-        ]);
-
         $content = Subject::create([
-            'displayName' => 'Content Manager',
+            'name' => 'Content Manager',
             'type' => 'content-manager',
             'editable' => false,
             'creator_id' => 1,
@@ -47,7 +38,7 @@ class DatabaseSeeder extends Seeder{
         ]);
 
         $attributes = Subject::create([
-            'displayName' => 'Attributes',
+            'name' => 'Attributes',
             'type' => 'content-manager',
             'parent_id' => $content->id,
             'creator_id' => 1,
@@ -56,10 +47,29 @@ class DatabaseSeeder extends Seeder{
             'table' => 'attributes'
         ]);
 
+        $permissions = Subject::create([
+            'name' => 'Permissions',
+            'type' => 'auth',
+            'creator_id' => 1,
+            'parent_id' => $roles->id,
+            'model' => 'Permission',
+            'editable' => false
+        ]);
+
+        $entryPermissions = Subject::create([
+            'name' => 'Entry Permissions',
+            'type' => 'auth',
+            'creator_id'=> 1,
+            'parent_id' => $permissions->id,
+            'model' => 'EntryPermission',
+            'editable' => false
+        ]);
+
         //Attributes for user
 
         Attribute::create([
             'name' => 'name',
+            'is_display_name' => true,
             'type' => 'string',
             'subject_id' => $users->id
         ]);
@@ -85,18 +95,12 @@ class DatabaseSeeder extends Seeder{
             'subject_id' => $users->id
         ]);
 
-        Attribute::create([
-            'name' => 'rememberToken',
-            'type' => 'rememberToken',
-            'subject_id' => $users->id,
-            'required' => false,
-        ]);
-
         //Attributes of role
 
         Attribute::create([
             'name' => 'name',
             'type' => 'string',
+            'is_display_name' => true,
             'subject_id' => $roles->id
         ]);
 
@@ -109,6 +113,7 @@ class DatabaseSeeder extends Seeder{
 
         Attribute::create([
             'name' => 'admin',
+            'required' => false,
             'default' => "false",
             'type' => 'boolean',
             'subject_id' => $roles->id
@@ -126,6 +131,16 @@ class DatabaseSeeder extends Seeder{
             'name' => 'role_id',
             'type' => 'relation',
             'relation' => $users->id,
+            'relation_type' => 'has_many',
+            'subject_id' => $roles->id
+        ]);
+
+        Attribute::create([
+            'function_name' => 'entry_permissions_by_role',
+            'name' => 'entry_permissions_by_role',
+            'type' => 'relation',
+            'identifier' => true,
+            'relation' => $entryPermissions->id,
             'relation_type' => 'has_many',
             'subject_id' => $roles->id
         ]);
@@ -157,6 +172,88 @@ class DatabaseSeeder extends Seeder{
             'relation_type' => 'belongs_to',
             'subject_id' => $permissions->id
         ]);
+
+        // Attributes of EntryPermission
+
+        Attribute::create([
+            'name' => 'action',
+            'type' => 'enum',
+            'enum' => 'read,edit,delete',
+            'identifier' => true,
+            'subject_id' => $entryPermissions->id
+        ]);
+
+        Attribute::create([
+            'name' => 'role_id',
+            'type' => 'relation',
+            'relation' => $roles->id,
+            'relation_type' => 'belongs_to',
+            'identifier' => true,
+            'subject_id' => $entryPermissions->id
+        ]);
+
+        Attribute::create([
+            'name' => 'subject_id',
+            'type' => 'relation',
+            'identifier' => true,
+            'relation' => $content->id,
+            'relation_type' => 'belongs_to',
+            'subject_id' => $entryPermissions->id
+        ]);
+
+        Attribute::create([
+            'name' => 'entry_id',
+            'type' => 'relation',
+            'identifier' => true,
+            'relation' => 0,
+            'relation_type' => 'polymorphic_belongs_to',
+            'subject_id' => $entryPermissions->id
+        ]);
+        //Attributes for content
+        /*Attribute::create([
+            'name' => 'subject_id',
+            'type' => 'string',
+            'is_display_name' => true,
+            'subject_id' => $content->id
+        ]);
+
+        Attribute::create([
+            'name' => 'description',
+            'type' => 'string',
+            'required' => false,
+            'subject_id' => $content->id
+        ]);
+
+        Attribute::create([
+            'name' => 'type',
+            'type' => 'enum',
+            'enum' => 'auth,content-manager',
+            'subject_id' => $content->id
+        ]);
+
+        Attribute::create([
+            'name' => 'authenticatable',
+            'type' => 'boolean',
+            'subject_id' => $content->id
+        ]);
+
+        Attribute::create([
+            'name' => 'parent_id',
+            'type' => 'relation',
+            ''
+        ]);*/
+
+        $subjects = Subject::all();
+
+        foreach($subjects as $subject){
+            Attribute::create([
+                'name' => 'entry_permissions',
+                'type' => 'relation',
+                'relation' => $entryPermissions->id,
+                'relation_type' => 'polymorphic_has_many',
+                'subject_id' => $subject->id
+            ]);
+        }
     }
 }
 

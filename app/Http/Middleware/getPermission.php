@@ -23,7 +23,6 @@ class getPermission
         $subject = $this->getSubject($this->getPath($request));
         $roleId  = auth()->user()->role_id;
         $permission = $this->getPermission($roleId,$subject->id,$action);
-
         //if the permission does not exist check for the self permission of the action
         // (except if the action is create)
         if(!$permission){

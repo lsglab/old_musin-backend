@@ -12,6 +12,8 @@ use App\Observers\AttributeObserver;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\Attribute;
+use App\Observers\EntryPermissionObserver;
+use App\Models\generated\EntryPermission;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -36,5 +38,6 @@ class EventServiceProvider extends ServiceProvider
         Subject::observe(SubjectObserver::class);
         User::observe(UserObserver::class);
         Attribute::observe(AttributeObserver::class);
+        EntryPermission::observe(EntryPermissionObserver::class);
     }
 }

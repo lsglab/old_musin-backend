@@ -12,7 +12,8 @@ class ClassFinder {
     private $appRoot;
 
     public function __construct(){
-        $this->appRoot = getcwd()."/";
+        $path = base_path();
+        $this->appRoot = $path."/";
     }
 
     public function getClassesInFolder($path)
@@ -49,5 +50,36 @@ class ClassFinder {
         }
 
         return $fqcns;
+    }
+
+    public function searchForController($controller){
+        $classes = $this->getClassesInFolder('app/Http/Controllers');
+
+        foreach($classes as $class){
+            $namespace = "App\Http\Controllers\\{$controller}Controller";
+            if($class === $namespace){
+                return $namespace;
+            }
+        }
+
+        return "App\Http\Controllers\generated\\{$controller}Controller";
+
+        return false;
+    }
+
+    public function searchForModel($model){
+        $classes = $this->getClassesInFolder('app/Models');
+
+        foreach($classes as $class){
+            error_log("class $class, model: $model");
+            $namespace = "App\Models\\{$model}";
+            if($class === $namespace){
+                return $namespace;
+            }
+        }
+
+        return "App\Models\generated\\{$model}";
+
+        return false;
     }
 }

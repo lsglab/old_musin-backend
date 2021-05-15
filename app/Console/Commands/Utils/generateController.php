@@ -16,6 +16,9 @@ class GenerateController {
         $createValidator = $validator[0];
         $uses = $uses.$validator[1];
 
+        $validator = self::makeValidation($subject,true);
+        $editValidator = $validator[0];
+
         /*$makeCreation = self::makeCreation($subject);
         $create = $makeCreation[0];
         $uses = $uses.$makeCreation[1];*/
@@ -33,7 +36,8 @@ return "<?php
 namespace App\Http\Controllers\generated;
 
 use Illuminate\Support\Facades\Validator;
-use App\Http\Controllers\MainController;
+use App\Http\Controllers\Base\MainController;
+use Illuminate\Validation\Rule;
 $uses
 class {$subject->model}Controller extends MainController
 {
@@ -53,6 +57,12 @@ class {$subject->model}Controller extends MainController
 
         return \$this->respond([\$this->table => \$array]);
     }
+
+    function create_edit_validation(\$edit){
+        \$this->editValidation = [
+            $editValidator
+        ];
+    }
 }";
     }
 
@@ -62,44 +72,19 @@ class {$subject->model}Controller extends MainController
 
         foreach($subject->attributes as $attribute){
 
-            if($attribute->type !== 'relation'){
+            if($attribute->type !== 'relation' || $attribute->relation_type === 'polymorphic_belongs_to'){
                 continue;
             }
 
             $foreign = Subject::where('id',$attribute->relation)->first();
 
-            $foreignClassPath = self::searchForController($foreign->model);
-            $foreignClassName = "{$foreign->model}Controller";
-            //$foreignClassAlias = $foreignClassName;
+            $finder = new ClassFinder();
 
-            if($foreignClassPath === false){
-                $foreignClassPath = "App\Http\Controllers\generated\\";
-            }
-
-            /*if($foreign->id === $subject->id){
-                $foreignClassAlias = "Manual{$foreign->model}Controller";
-            }
-
-            if(! ($foreignClassPath === false && $foreign->id === $subject->id)){
-
-                $use = "use ".$foreignClassPath.$foreignClassName." as ".$foreignClassAlias."; \n";
-
-                if(!in_array($use,$uses)){
-                    array_push($uses,$use);
-                };
-            }*/
-
-            $controller = $foreignClassPath.$foreignClassName;
+            $controller = $finder->searchForController($foreign->model);
 
             $string = $string."
             \$data = \$this->getRelation(\$data,'$attribute->function_name','$controller');";
         }
-
-        /*if(count($uses) > 0){
-            $uses = implode('',$uses);
-        } else {
-            $uses = "//controllers used";
-        }*/
 
         return $string;
     }
@@ -118,18 +103,18 @@ class {$subject->model}Controller extends MainController
         return false;
     }
 
-    public static function makeValidation($subject,$nullable){
+    public static function makeValidation($subject,$edit){
         $validation = "\n";
         $uses = array();
 
         foreach($subject->attributes as $attribute){
             $part = array();
 
-            if($attribute->type === 'rememberToken'){
+            if($attribute->type === 'timestamp' || $attribute->type === 'id'){
                 continue;
             }
 
-            if($attribute->required && $nullable === false){
+            if($attribute->required && $edit === false){
                 array_push($part,"'required'");
             } else {
                 array_push($part,"'nullable'");
@@ -137,11 +122,11 @@ class {$subject->model}Controller extends MainController
 
             switch($attribute->type){
                 case "password":
-                    array_push($uses,"use Illuminate\Validation\Rules\Password;\n");
-                    array_push($part,"'string'","Password::min(8)->letters()->mixedCase()->numbers()->symbols()->uncompromised()","'confirmed'");
+                    //array_push($uses,"use Illuminate\Validation\Rules\Password;\n");
+                    array_push($part,"'string'","'min:8'","'confirmed'");
                     break;
                 case "relation":
-                    if($attribute->relation_type === 'has_many' || $attribute->name === 'creator_id'){
+                    if($attribute->relation_type === 'has_many' || $attribute->name === 'creator_id' || $attribute->relation_type === 'polymorphic_belongs_to' || $attribute->relation_type === 'polymorphic_has_many'){
                         continue 2;
                     }
 
@@ -152,12 +137,19 @@ class {$subject->model}Controller extends MainController
                     $enum = $attribute->enum;
                     array_push($part,"'in:$enum'");
                     break;
+                case 'polymorphic_type':
+                    array_push($part,"'string'");
+                    break;
                 default:
                     array_push($part,"'$attribute->type'");
             }
 
             if($attribute->unique){
-                array_push($part,"'unique:$subject->table'");
+                if($edit){
+                    array_push($part,"Rule::unique('$subject->table')->ignore(\$edit->id)");
+                } else {
+                    array_push($part,"'unique:$subject->table'");
+                }
             }
 
             if($attribute->identifier){

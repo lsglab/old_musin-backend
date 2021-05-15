@@ -10,55 +10,18 @@ use App\Http\Controllers\generated\RoleController as GeneratedRoleController;
 
 class RoleController extends GeneratedRoleController
 {
-    function read_self(){
-        $query = $this->getQuery();
-        $user = auth()->user();
-
-        $builder = Role::where('id',$user->roles->id);
-
-        if($query != false){
-            $builder = $this->queryBuilder($builder,'roles');
-        }
-
-        $data = $builder->get();
-
-        return $data;
+    public function __construct(){
+        parent::__construct();
     }
 
-    function getPermissions($roles){
-        $permission = $this->getInput('permissions');
-        if($permission !== false){
+    function read_self($query = null){
+        $user = auth()->user();
 
-            $subjects = Subject::all();
+        $builder = Role::where('id',$user->role->id);
 
-            foreach($roles as &$role){
-                $permissions = $role->permissions;
-                $rolePermissions = array();
+        $builder = $this->queryBuilder($builder,$query);
 
-                foreach($subjects as &$subject){
-                    $subPermissions = array();
-
-                    foreach($this->actions as $action){
-                        $hasPermission = false;
-
-                        if(count($permissions->filter(function ($value,$key) use ($action,$subject){
-                            return $value->action === $action && $value->subject_id === $subject -> id;
-                        })->all()) > 0){
-                            $hasPermission = true;
-                        }
-
-                        $subPermissions[$action] = $hasPermission;
-                    }
-
-                    $subject->permissons = $subPermissions;
-                    array_push($rolePermissions,$subject);
-                }
-
-                unset($role->permissions);
-                $role->subjects = $rolePermissions;
-            }
-        }
-
-        return $roles;
+        $data = $builder->get();
+        return $data;
     }
 }

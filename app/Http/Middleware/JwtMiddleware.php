@@ -20,33 +20,39 @@ class JwtMiddleware extends BaseMiddleware
      */
 
     public function handle($request, Closure $next){
+        $token;
+
         try {
             JWTAuth::parseToken()->authenticate();
+            $token = JWTAuth::getToken();
         } catch (Exception $e) {
             if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException){
 
                 return $this->respond(['message' => 'invalid_token'],401);
             } else if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException){
+                error_log("token expored");
+                $refresh_token = $request->cookie('refresh_token');
 
-                $refreshed = JWTAuth::refresh();
-                $user = JWTAuth::setToken($refreshed)->toUser();
-                // only send the refreshed token back if the cookie is sent with the request
-                if($request->cookie('refresh_token') === $user->getRememberToken()){
-                    $roleId = $user->role_id;
-                    $request->headers->set('Authorization',"Bearer $refreshed");
-                }
-                else {
+                if($refresh_token != null){
+                    $user = User::where('remember_token',$refresh_token)->first();
+                    if($user === null){
+                        return $this->respond(['message' => 'invalid remember_token'],403);
+                    }
+                    $token = auth()->login($user);
+                } else {
                     return $this->respond(['message' => 'token_expired'],403);
                 }
             }else{
                 // login the public user; This way it doesnt matter whether the user or public sends
                 // a request the user can always be retrieved with auth()->user();
                 $user = User::where('email','public@lsg.de')->first();
-                Auth::login($user);
+                $token = auth()->login($user);
             }
         }
 
-        return $next($request);
+        $reponse = $next($request);
+        $reponse->header("Authorization","Bearer $token");
+        return $reponse;
     }
 
     function respond($array,$status = 200){

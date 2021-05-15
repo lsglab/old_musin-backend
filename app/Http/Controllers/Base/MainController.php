@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Base;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -8,6 +8,9 @@ use App\Models\generated\Permission;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Hash;
+use App\Models\generated\EntryPermission;
+use App\Models\Subject;
+use Illuminate\Support\Facades\DB;
 
 class MainController extends Controller
 {
@@ -15,6 +18,7 @@ class MainController extends Controller
     public array $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
     public string $model;
     public string $table;
+    public Subject $subject;
     public array $createValidation = [];
     public array $editValidation = [];
     public array $hidden = [];
@@ -36,13 +40,18 @@ class MainController extends Controller
                 }
             }
         }
+
+        unset($this->request['userPermission']);
     }
 
-    public function handle(){
-        $permission = $this->request->userPermission;
+    public function handle($action = null){
+        $this->request = request();
+        if($action === null){
+            $action = $this->request->userPermission;
+        }
         unset($this->request['userPermission']);
 
-        switch($permission){
+        switch($action){
             case 'read':
                 return $this->handleRead();
                 break;
@@ -208,12 +217,39 @@ class MainController extends Controller
         return array_diff($columns,$this->hidden);
     }
 
-    function queryBuilder($builder = null){
-        if($builder == null){
+    function filterData($object){
+        $columns = Schema::getColumnListing($this->table);
+        $keys = array_keys($object);
+        $diff = array_diff($keys,$columns);
+        foreach($diff as $key){
+            unset($object[$key]);
+        }
+        return $object;
+    }
+
+    function queryBuilder($builder = null,$query = null){
+        $role_id = auth()->user()->role_id;
+
+        if($builder === null){
             $builder = $this->model::where('id','!=',-1);
         }
 
-        $query = $this->getQuery();
+        $hasEntryPermissions = count($this->model::whereHas('entry_permissions',function($query) use ($role_id){
+            $query->where('role_id',$role_id);
+        })->get()) > 0;
+
+        $baseAction = $this->getAction();
+
+        $builder->when($hasEntryPermissions,function($query) use($baseAction,$role_id){
+            return $query->whereHas('entry_permissions',function($query) use ($baseAction,$role_id){
+                $query->where('action',$baseAction);
+                $query->where('role_id',$role_id);
+            });
+        });
+
+        if($query === null){
+            $query = $this->getQuery();
+        }
         $columns = $this->getColumns();
 
         if(!$query){
@@ -241,7 +277,11 @@ class MainController extends Controller
                 }
             }
             else if(in_array($key,$columns)){
-                $builder = $builder->where($key,$value);
+                if($value === "null"){
+                    $builder = $builder->whereNull($key);
+                } else {
+                    $builder = $builder->where($key,$value);
+                }
             } else {
                 //just add a query that always fails -> empty array is returned
                 $builder = $builder->where('id',-1);
@@ -256,11 +296,13 @@ class MainController extends Controller
     }
 
     function afterRead($data){
+        // $data = $this->remove($data);
         return $this->processDataAndRespond($data);
     }
 
     function afterEdit($updated){
-        return $this->processDataAndRespond(array($updated));
+        $updated = array($updated);
+        return $this->processDataAndRespond($updated);
     }
 
     function afterCreate($created){
@@ -275,19 +317,32 @@ class MainController extends Controller
         return $this->respond([$this->table => $data]);
     }
 
-    function getRelation($data,$relation,$controller){
+    function setData($data,$self,$relation){
+        $return = $this->getEqualObjects($data->$relation,$self);
+
+        if($relation === 'users'){
+            $s = $data->$relation;
+        }
+        unset($data->$relation);
+        $data->$relation = $return;
+        return $data;
+    }
+
+    function getRelation($data,$relation,$controller,$checkPermission = true){
         $roleId = auth()->user()->role_id;
 
-        if($this->getPermission($roleId,1,'read') !== false){
-            $data->$relation;
-        } else if($this->getPermission($roleId,1,'read-self') !== false){
+        $foreignClass = new $controller;
+        $subject = Subject::where('table',$foreignClass->table)->first();
 
-            $foreignClass = new $controller;
-            $self = $foreignClass->read_self();
-            $return = $this->getEqualObjects($data->$relation,$self);
+        if($this->getPermission($roleId,$subject->id,'read') !== false || $checkPermission === false){
+            $self = $foreignClass->read(false);
+            $data = $this->setData($data,$self,$relation);
 
-            unset($data->$relation);
-            $data->$relation = $return;
+        } else if($this->getPermission($roleId,$subject->id,'read-self') !== false){
+
+            $self = $foreignClass->read_self(false);
+            $data = $this->setData($data,$self,$relation);
+
         } else {
             $data->$relation = array();
         }
@@ -295,29 +350,28 @@ class MainController extends Controller
         return $data;
     }
 
-    function read(){
-        $query = $this->getQuery();
-
-        if(!$query){
-            $data = $this->model::all();
-        } else {
-            $builder = $this->queryBuilder();
-
-            $data = $builder->get();
+    function read($query = null){
+        if($query === null){
+            $query = $this->getQuery();
         }
+
+
+        $builder = $this->queryBuilder(null,$query);
+        $data = $builder->get();
 
         return $data;
     }
 
-    function read_self(){
-        $query = $this->getQuery();
+    function read_self($query = null){
+        if($query === null){
+            $query = $this->getQuery();
+        }
+
         $user = auth()->user();
 
         $builder = $this->model::where('creator_id',$user->id);
 
-        if($query != false){
-            $builder = $this->queryBuilder($builder);
-        }
+        $builder = $this->queryBuilder($builder,$query);
 
         $data = $builder->get();
 
@@ -335,21 +389,35 @@ class MainController extends Controller
 
         $edit = $edit[0];
 
-        $validate = $this->validate_edit();
+        $validate = $this->validate_edit($edit);
 
         if($validate !== true){
             return $validate;
         }
 
         $editData = $this->getRequestBody();
+        $editData = $this->filterData($editData);
 
         foreach($editData as $key => $value){
-            $edit->$key = $value;
+            $edit = $this->edit_one($edit,$key,$value);
         }
 
         $edit->save();
 
         return $edit;
+    }
+
+    function edit_one($entry,$key,$value){
+        switch($key){
+            case "password":
+                $entry->$key = Hash::make($value);
+                break;
+            default:
+                $entry->$key = $value;
+                break;
+        }
+
+        return $entry;
     }
 
     function delete($query){
@@ -388,10 +456,26 @@ class MainController extends Controller
         }
 
         foreach($delete as $entry){
-            $entry->delete();
+            $this->delete_one($entry);
         }
 
         return $delete;
+    }
+
+    function delete_one($entry){
+        $subject = Subject::where('table',$this->table)->first();
+
+        if($subject !== null){
+            foreach($subject->children as $child){
+                $relation = $child->attributes->firstWhere('relation',$subject->id);
+
+                if($relation !== null){
+                    DB::delete("delete from $child->table where $relation->name = $entry->id");
+                }
+            }
+        }
+
+        $entry->delete();
     }
 
     function create($create = null){
@@ -405,28 +489,27 @@ class MainController extends Controller
             return $validate;
         }
 
-        $body = $this->getRequestBody();
-
-
-        $created = $this->createOne($create);
+        $created = $this->create_one($create);
 
         return $created;
     }
 
-    function createOne($create){
+    function create_one($create){
         $array = [];
         $columns = Schema::getColumnListing($this->table);
 
-        foreach($columns as $key => $value){
+        foreach($columns as $key){
             if(array_key_exists($key,$create)){
                 switch($key){
-                    case 'creator_id':
-                        $array[$key] = auth()->user()->id;
                     case 'password':
                         $array[$key] = Hash::make($create[$key]);
                     default:
                         $array[$key] = $create[$key];
                 }
+            }
+
+            if($key === 'creator_id'){
+                $array[$key] = auth()->user()->id;
             }
         }
 
@@ -447,10 +530,20 @@ class MainController extends Controller
         return true;
     }
 
-    function validate_edit($object = null){
+    function create_edit_validation($create){
+
+    }
+
+    function create_create_validation($create){
+
+    }
+
+    function validate_edit($edit,$object = null){
         if($object == null){
             $object = $this->request->all();
         }
+
+        $this->create_edit_validation($edit);
 
         return $this->validateRequest($this->editValidation,$object);
     }
@@ -460,6 +553,25 @@ class MainController extends Controller
             $object = $this->request->all();
         }
 
+        $this->create_create_validation($object);
+
         return $this->validateRequest($this->createValidation,$object);
+    }
+
+    function getAction(){
+        switch($this->request->method()){
+            case 'POST':
+                return 'create';
+                break;
+            case 'GET':
+                return 'read';
+                break;
+            case 'PUT':
+                return 'edit';
+                break;
+            case 'DELETE':
+                return 'delete';
+                break;
+        }
     }
 }

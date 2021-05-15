@@ -10,15 +10,35 @@ class AttributeObserver
 {
 
     public function creating(Attribute $attribute){
-        if($attribute->function_name == null && $attribute->relation != null){
-            $foreign = Subject::where('id',$attribute->relation)->first();
-
-            $attribute->function_name = $foreign->table;
-        }
-
+        // echo "attribute: $attribute; \n";
         $attribute->name = toSnakeCase($attribute->name);
         $attribute->relation_type = toSnakeCase($attribute->relation_type);
         $attribute->function_name = toSnakeCase($attribute->function_name);
+
+        if($attribute->function_name === null && $attribute->relation !== null){
+            $foreign = Subject::where('id',$attribute->relation)->first();
+
+            if($attribute->relation_type === 'belongs_to'){
+                $attribute->function_name = strtolower($foreign->model);
+            }
+            else if($attribute->relation_type === 'polymorphic_belongs_to'){
+                $attribute->function_name = explode('_id',$attribute->name)[0];
+
+                Attribute::create([
+                    'name' => "{$attribute->function_name}_type",
+                    'hidden' => true,
+                    'required' => false,
+                    'type' => 'polymorphic_type',
+                    'subject_id' => $attribute->subject_id
+                ]);
+            } else {
+                $attribute->function_name = $foreign->table;
+            }
+        }
+
+        if($attribute->type === 'password'){
+            $attribute->hidden = true;
+        }
 
         return $attribute;
     }

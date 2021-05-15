@@ -6,7 +6,7 @@ use App\Models\Subject;
 class GenerateMigration {
 
     public static function run($subject){
-        $attributes = GenerateMigration::attributeString($subject->attributes);
+        $attributes = GenerateMigration::attributeString($subject);
         $table = $subject->table;
         $className = GenerateMigration::generateClassName($subject->table);
 
@@ -26,9 +26,7 @@ class GenerateMigration {
             public function up()
             {
                 Schema::create('$table', function (Blueprint \$table) {
-                        \$table->id();
                     $attributes
-                        \$table->timestamps();
                 });
             }
 
@@ -44,13 +42,15 @@ class GenerateMigration {
         }";
     }
 
-    public static function attributeString($attributes){
+    public static function attributeString($subject){
         $string = '';
         $unique = array();
 
-        foreach($attributes as $attribute){
+        $parts = array();
 
-            $part = "\t\t\t\$table->";
+        foreach($subject->attributes as $attribute){
+
+            $part = "\t\t\t\t\t\$table->";
             $name = $attribute->name;
 
             switch($attribute->type){
@@ -75,24 +75,36 @@ class GenerateMigration {
                 case 'enum':
                     $part = $part."string('$name')";
                     break;
-                case 'rememberToken':
-                    $part = $part."rememberToken()";
+                case 'id':
+                    $part = $part."id()";
                     break;
                 case 'relation':
+                    if($attribute->relation_type === 'polymorphic_belongs_to'){
+                        $part = $part."integer('$attribute->name')";
+                        break;
+                    }
 
-                    $foreign = Subject::where('id',$attribute->relation)->first();
-                    $name = strtolower($foreign->model)."_id";
+                    if($attribute->relation_type === 'belongs_to'){
+                        $foreign = Subject::where('id',$attribute->relation)->first();
+                        $name = strtolower($foreign->model)."_id";
 
-                    if($attribute->relation_type == 'belongs_to'){
                         if($attribute->name === $name){
                             $part = $part."foreignId('$name')";
                         } else {
                             $part = $part."integer('$attribute->name')";
                         }
-                    } else {
-                        continue 2;
+                        break;
                     }
 
+                    continue 2;
+                case 'timestamp':
+                    if(!in_array($part."timestamps();",$parts)){
+                        $part = $part."timestamps()";
+                        break;
+                    }
+                    continue 2;
+                case 'polymorphic_type':
+                    $part = $part."string('$name')";
                     break;
                 default:
                     continue 2;
@@ -111,13 +123,19 @@ class GenerateMigration {
             }
 
 
-            $part = $part.";\n";
-            $string = $string.$part;
+            $part = $part.";";
+            array_push($parts,$part);
         }
+
+        $string = implode("\n",$parts);
 
         if(count($unique) > 0){
             $implode = implode(',',$unique);
             $string = $string."\$table->unique([$implode]);\n";
+        }
+
+        if($subject->authenticatable){
+            $string = $string."\n\$table->rememberToken();";
         }
 
         return $string;

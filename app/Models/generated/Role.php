@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User; 
 use App\Models\generated\Permission; 
+use App\Models\generated\EntryPermission; 
 
 
 class Role extends Model
@@ -15,7 +16,9 @@ class Role extends Model
     protected $fillable = ['creator_id','name','description','admin',];
     protected $hidden = [];
     protected $attributes = ['description' => '', 
+'admin' => false, 
 ];
+    protected $casts = ['admin' => 'boolean',];
 
     //relationships: 
 
@@ -30,5 +33,13 @@ class Role extends Model
                 
 	public function users(){
         return $this->hasMany(User::class);
+    }
+                
+	public function entry_permissions_by_role(){
+        return $this->hasMany(EntryPermission::class);
+    }
+                
+	public function entry_permissions(){
+        return $this->morphMany(EntryPermission::class,'entry');
     }
 }
