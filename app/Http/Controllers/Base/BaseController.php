@@ -67,22 +67,25 @@ class BaseController extends Controller
 
     protected function handleCreate(){
         $body = $this->request->getRequestBody();
-
+        //create wants an array or object as datatype
         if(gettype($body) !== 'array'){
             return $this->respond(['message' => 'Invalid data. Expected object or array'],400);
         }
 
         $data = array();
-
+        //if an object was given, make it to an array;
         if(!array_key_exists('0',$body)){
             $body = array($body);
         }
 
         foreach($body as $ele){
+            //run the create function for each object
             $created = $this->create($ele);
+            //if one of them throws and error return;
             if(Helper::isResponse($created)){
                 return $created;
             }
+            //push the created ele to the results
             array_push($data,$created);
         }
 
@@ -116,7 +119,7 @@ class BaseController extends Controller
 
     protected function edit($edit){
         $count = count($edit);
-
+        //make sure that no more than one element can be edited at a time
         if($count > 1){
             return $this->respond(['message' => 'You can only edit one entry at once'],400);
         } else  if($count == 0){
@@ -124,7 +127,7 @@ class BaseController extends Controller
         }
 
         $edit = $edit[0];
-
+        //validate the request data
         $validate = $this->validateEdit($edit);
 
         if($validate !== true){
@@ -165,12 +168,15 @@ class BaseController extends Controller
             return false;
         }
 
+        //only run this code if the body of the request contains an array called "ids"
         if($body != null && array_key_exists('ids',$body)){
             foreach($body['ids'] as $id){
+                //make sure the id has a valid type
                 if(gettype($id) !== 'integer'){
                     return $this->respond(['message' => 'Id must be of type integer'],400);
                 }
-
+                //through comparing the ids in the id array and the result of the search query
+                //we achieve that only elements that are in both are being deleted
                 $filter = getQueryEle($query,$id);
 
                 if($filter !== false){
@@ -182,11 +188,11 @@ class BaseController extends Controller
         }
 
         $count = count($delete);
-
+        //return if no element was found/selected
         if($count == 0){
             return $this->respond(['message' => 'No entry found or no permission to delete'],404);
         }
-
+        //handle delete logic
         foreach($delete as $entry){
             $this->deleteOne($entry);
         }
@@ -194,12 +200,22 @@ class BaseController extends Controller
         return $delete;
     }
 
+    //delete one handles the actual delete logic;
     protected function deleteOne($entry){
         foreach($this->table->children as $child){
-            $relation = $child->attributes->firstWhere('relation',$subject->id);
+            $table = new $child;
+            //find the relation between the subject and the children
+            //this method of deleting the children assumes that there is a relationship
+            //between the parent and children
+            $relation = array_filter($table->relations,function($value){
+                return $value->getForeignTable()->table === $this->table->table;
+            });
 
-            if($relation !== null){
-                DB::delete("delete from $child->table where $relation->name = $entry->id");
+            if(count($relation) > 0){
+                //if a relationship was found delete all entries from the children table where the foreignKey matches
+                //the parent entry
+                $relation = array_values($relation)[0];
+                DB::delete("delete from $table->table where $relation->name = $entry->id");
             }
         }
 
@@ -207,10 +223,11 @@ class BaseController extends Controller
     }
 
     protected function create($create = null){
+        //if no data is given take the request body as data;
         if($create == null){
             $create = $this->request->request->all();
         }
-
+        //validate the data
         $validate = $this->validateCreate($create);
 
         if($validate !== true){
@@ -222,6 +239,7 @@ class BaseController extends Controller
         return $created;
     }
 
+    //createOne handles the actual creation logic
     protected function createOne($create){
         return $this->table->model::create($create);
     }

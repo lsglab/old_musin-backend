@@ -12,6 +12,8 @@ class RoleTable extends BaseTable
 {
     public string $name = 'role';
 
+    public array $children = ['App\Tables\PermissionTable'];
+
     public function __construct(){
         $this->columns = [
             new DBString($this,'name',['unique' => true]),

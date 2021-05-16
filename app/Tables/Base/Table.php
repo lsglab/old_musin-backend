@@ -11,7 +11,7 @@ abstract class Table
     //the name of the table
     public string $name;
     //the namespace path of the controller that belongs to this table
-    public ?string $controller = null;
+    public ?string $controller;
     //the namespace path of the model that belongs to this table
     public ?string $model = null;
     //the namespace path of the table (e.g if the class name is User the table is App/Tables/User);
@@ -42,11 +42,9 @@ abstract class Table
     // all attribute that appear in the api response
     public $visible = [];
 
-    public function __construct($parent = null,$children = []){
+    public function __construct(){
         $this->setPaths();
         $this->name = Helper::toSnakeCase($this->name);
-        $this->parent = $parent;
-        $this->children = $children;
         $this->setPlural();
         $this->setTable();
         $this->createFillable($this->table);

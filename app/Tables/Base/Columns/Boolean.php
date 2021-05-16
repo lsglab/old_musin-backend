@@ -11,4 +11,8 @@ class Boolean extends Column{
     public function getCast(){
         return 'boolean';
     }
+
+    public function createDBColumn($table){
+        return $table->boolean($name);
+    }
 }

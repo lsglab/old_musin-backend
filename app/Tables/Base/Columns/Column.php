@@ -4,7 +4,7 @@ namespace App\Tables\Base\Columns;
 use Illuminate\Validation\Rule;
 use App\Rules\CompositeUnique;
 
-class Column{
+abstract class Column{
 
     //the table this column belongs to
     public $table;
@@ -118,5 +118,9 @@ class Column{
     //the type specific validation for each column
     protected function getTypeValidation($object) : array{
         return [$this->type];
+    }
+
+    public function createDBColumn($table){
+        return null;
     }
 }

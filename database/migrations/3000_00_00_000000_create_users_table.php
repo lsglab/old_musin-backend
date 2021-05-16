@@ -6,6 +6,7 @@
 
         class CreateUsersTable extends Migration
         {
+            $columns = [];
             /**
              * Run the migrations.
              *
@@ -14,14 +15,18 @@
             public function up()
             {
                 Schema::create('users', function (Blueprint $table) {
-                    					$table->integer('creator_id');
+                    /*$table->integer('creator_id');
 					$table->id();
+                    $table->boolean('asdfd');
 					$table->timestamps();
 					$table->string('name');
 					$table->string('email')->unique();
 					$table->string('password');
 					$table->foreignId('role_id');
-$table->rememberToken();
+                    $table->rememberToken();*/
+                    foreach($columns as $column){
+                        $column->createDBColumn($table);
+                    }
                 });
             }
 

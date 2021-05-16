@@ -18,6 +18,8 @@ class MainController extends BaseController
     public function handle($action = null){
         $this->request = new Request();
         if($action === null){
+            //if no action was given, get the action from the request.
+            //User permission is set by the getPermission middleware
             $action = $this->request->getInput(['userPermission']);
         }
         unset($this->request->request['userPermission']);
@@ -77,6 +79,7 @@ class MainController extends BaseController
     }
 
     function getPermission($role_id,$table,$action){
+        //get a permission
         $permission = Permission::where('role_id',$role_id)
             ->where('table',$table)
             ->where('action',$action)
@@ -91,6 +94,7 @@ class MainController extends BaseController
 
     function processDataAndRespond($array){
         foreach($array as $data){
+            //resolve all of the tables relations
             foreach($data->t_table->relations as $relation){
                 $table = new $relation->foreignTable;
                 $data = $this->getRelation($data,$relation->getFunctionName(),$table->controller);
@@ -101,25 +105,30 @@ class MainController extends BaseController
     }
 
     function setData($data,$self,$relation){
+        //get the data of the model
         $rel = $data->getRelation($relation);
+        //filter the two arrays. Only the elements where the ids match are returned
         $return = Helper::getEqualObjectsByKey($rel,$self,'id');
-
+        //set the relation data;
         $data->$relation = $return;
+        //return
         return $data;
     }
 
     function getRelation($data,$relation,$controller){
         $roleId = auth()->user()->role_id;
-
+        //create the new controller
         $foreignClass = new $controller;
-
+        //check for either read or read-self permission, if the user has none of them,
+        //return an empty array
         if($this->getPermission($roleId,$foreignClass->table->table,'read') !== false){
             $self = $foreignClass->read(false);
+            //compare the data form the controller with the data of the model
             $data = $this->setData($data,$self,$relation);
 
         } else if($this->getPermission($roleId,$foreignClass->table->table,'read-self') !== false){
-
             $self = $foreignClass->readSelf(false);
+            //compare the data form the controller with the data of the model
             $data = $this->setData($data,$self,$relation);
 
         } else {

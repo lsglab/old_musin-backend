@@ -3,7 +3,7 @@
 namespace App\Tables\Base\Columns\Relation;
 use App\Tables\Base\Columns\Column;
 
-class Relation extends Column{
+abstract class Relation extends Column{
 
     //path to the foreign table which it has a relation with;
     public $foreignTable;
@@ -20,7 +20,7 @@ class Relation extends Column{
         $this->functionName = $functionName;
     }
 
-    protected function getForeignTable(){
+    public function getForeignTable(){
         if($this->foreignTable !== null && gettype($this->foreignTable) === 'string'){
             $this->foreignTable = new $this->foreignTable;
         }

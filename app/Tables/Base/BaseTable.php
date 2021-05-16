@@ -9,9 +9,9 @@ use App\Tables\User;
 
 class BaseTable extends Table{
 
-    public function __construct($parent = null,$children = []){
+    public function __construct(){
         $this->defaultColumns();
-        parent::__construct($parent,$children);
+        parent::__construct();
     }
 
     private function defaultColumns(){
