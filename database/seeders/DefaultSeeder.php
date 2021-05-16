@@ -3,13 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\generated\Role;
-use App\Models\generated\Permission;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Models\User;
-use App\Models\Subject;
-use App\Console\Commands\Utils\ClassFinder;
-use App\Models\generated\EntryPermission;
 
 //This Seeder is used for default data like the admin user and role;
 
@@ -24,23 +20,23 @@ class DefaultSeeder extends Seeder
     {
         //
         $actions = array('read','edit','create','delete','edit-self','delete-self','read-self');
-        $subjects = Subject::all()->all();
+        $tables = ['roles','users','permissions'];
 
-        $admin = Role::create([
+        $admin = new Role()->create([
             'name' => 'Admin',
             'description' => 'Die Admin Rolle hat alle Berechtigungen',
             'admin' => true,
             'creator_id' => 1,
         ]);
 
-        $public = Role::create([
+        $public = new Role()->create([
             'name' => 'Public',
             'description' => 'Diese Rolle steht für jeden nicht authentifizierten Benutzer',
             'admin' => false,
             'creator_id' => 1,
         ]);
 
-        $user = User::create([
+        $user = new User()->create([
             'name'=> 'Simon Weckler',
             'email' => 'simon.weckler@mnet-online.de',
             'password' => Hash::make('isgMidv1.12'),
@@ -48,7 +44,7 @@ class DefaultSeeder extends Seeder
             'creator_id' => 1,
         ]);
 
-        $user2 = User::create([
+        $user2 = new User()->create([
             'name' => 'Public',
             'email' => 'public@lsg.de',
             'password' => '',
@@ -56,34 +52,16 @@ class DefaultSeeder extends Seeder
             'creator_id' => $user->id
         ]);
 
-        foreach($subjects as $subject){
+        foreach($table as $table){
             foreach($actions as &$action){
                 //if($subject->model != 'User' || $action != 'read'){
-                    Permission::create([
+                    new Permission()->create([
                         'action'=>$action,
                         'role_id'=>$admin->id,
-                        'subject_id'=>$subject->id,
+                        'table'=>$table,
                         'creator_id' => $user->id
                     ]);
                 //}
-
-                /*if($subject->model === 'Permission' && $action === 'read' || $subject->model === 'Permission' && $action === 'create'){
-                     Permission::create([
-                        'action' => $action,
-                        'role_id' => $public->id,
-                        'subject_id' => $subject->id,
-                        'creator_id' => $user->id
-                     ]);
-                }*/
-
-                if($subject->model === 'Role' && $action === 'read-self'){
-                     Permission::create([
-                         'action' => $action,
-                         'role_id'=> $public->id,
-                         'subject_id' => $subject->id,
-                        'creator_id' => $user->id
-                     ]);
-                }
             }
         }
 

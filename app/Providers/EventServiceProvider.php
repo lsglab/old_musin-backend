@@ -6,14 +6,10 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
-use App\Observers\SubjectObserver;
 use App\Observers\UserObserver;
-use App\Observers\AttributeObserver;
-use App\Models\Subject;
 use App\Models\User;
-use App\Models\Attribute;
-use App\Observers\EntryPermissionObserver;
-use App\Models\generated\EntryPermission;
+//use App\Observers\EntryPermissionObserver;
+//use App\Models\generated\EntryPermission;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -35,9 +31,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Subject::observe(SubjectObserver::class);
         User::observe(UserObserver::class);
-        Attribute::observe(AttributeObserver::class);
-        EntryPermission::observe(EntryPermissionObserver::class);
+        //EntryPermission::observe(EntryPermissionObserver::class);
     }
 }

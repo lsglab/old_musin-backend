@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+/*namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -85,4 +85,4 @@ class SubjectController extends MainController
 
         return $this->respond(['subjects' => $data]);
     }
-}
+}*/

@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+/*namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Subject;
@@ -241,7 +241,7 @@ class DatabaseSeeder extends Seeder{
             'name' => 'parent_id',
             'type' => 'relation',
             ''
-        ]);*/
+        ]);
 
         $subjects = Subject::all();
 
@@ -255,5 +255,4 @@ class DatabaseSeeder extends Seeder{
             ]);
         }
     }
-}
-
+}*/

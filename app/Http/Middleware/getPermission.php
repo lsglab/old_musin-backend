@@ -4,9 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\generated\Role;
-use App\Models\generated\Permission;
-use App\Models\Subject;
+use App\Models\Role;
+use App\Models\Permission;
 
 class getPermission
 {
@@ -20,9 +19,9 @@ class getPermission
     public function handle($request, Closure $next){
 
         $action = $this->getAction($request);
-        $subject = $this->getSubject($this->getPath($request));
+        $table = $this->getPath($request);
         $roleId  = auth()->user()->role_id;
-        $permission = $this->getPermission($roleId,$subject->id,$action);
+        $permission = $this->getPermission($roleId,$table,$action);
         //if the permission does not exist check for the self permission of the action
         // (except if the action is create)
         if(!$permission){
@@ -31,7 +30,7 @@ class getPermission
             if($action !== 'create'){
                 $action = "{$action}-self";
 
-                $permission = $this->getPermission($roleId,$subject->id,$action);
+                $permission = $this->getPermission($roleId,$table,$action);
                 //if the user has the permission let him pass
                 if($permission !== false){
                     $authorized = true;
@@ -88,9 +87,9 @@ class getPermission
 
     //get a permission by role_id,subject_id and action.
     //If no permission is found, false is returned
-    function getPermission($role_id,$subject_id,$action){
+    function getPermission($role_id,$table,$action){
         $permission = Permission::where('role_id',$role_id)
-            ->where('subject_id',$subject_id)
+            ->where('table',$table)
             ->where('action',$action)
             ->first();
 

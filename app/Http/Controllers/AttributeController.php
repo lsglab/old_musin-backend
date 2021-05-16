@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+/*namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -55,4 +55,4 @@ class AttributeController extends MainController
     function read_self($query = null){
         return $this->read($query);
     }
-}
+}*/

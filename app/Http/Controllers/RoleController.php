@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Models\generated\Role;
-use App\Http\Controllers\generated\RoleController as GeneratedRoleController;
+use App\Models\Role;
+use App\Http\Controllers\MainController;
 
 
-class RoleController extends GeneratedRoleController
+class RoleController extends MainController;
 {
     public function __construct(){
         parent::__construct();

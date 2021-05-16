@@ -15,13 +15,9 @@ use Illuminate\Support\Facades\DB;
 class MainController extends Controller
 {
     public Request $request;
-    public array $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
     public string $model;
-    public string $table;
-    public Subject $subject;
     public array $createValidation = [];
     public array $editValidation = [];
-    public array $hidden = [];
 
     public function __construct(){
         $this->request = request();
@@ -172,9 +168,9 @@ class MainController extends Controller
         }
     }
 
-    function getPermission($role_id,$subject_id,$action){
+    function getPermission($role_id,$table,$action){
         $permission = Permission::where('role_id',$role_id)
-            ->where('subject_id',$subject_id)
+            ->where('table',$table)
             ->where('action',$action)
             ->first();
 
@@ -234,7 +230,7 @@ class MainController extends Controller
             $builder = $this->model::where('id','!=',-1);
         }
 
-        $hasEntryPermissions = count($this->model::whereHas('entry_permissions',function($query) use ($role_id){
+        /*$hasEntryPermissions = count($this->model::whereHas('entry_permissions',function($query) use ($role_id){
             $query->where('role_id',$role_id);
         })->get()) > 0;
 
@@ -245,7 +241,7 @@ class MainController extends Controller
                 $query->where('action',$baseAction);
                 $query->where('role_id',$role_id);
             });
-        });
+        });*/
 
         if($query === null){
             $query = $this->getQuery();
@@ -320,9 +316,6 @@ class MainController extends Controller
     function setData($data,$self,$relation){
         $return = $this->getEqualObjects($data->$relation,$self);
 
-        if($relation === 'users'){
-            $s = $data->$relation;
-        }
         unset($data->$relation);
         $data->$relation = $return;
         return $data;
@@ -354,7 +347,6 @@ class MainController extends Controller
         if($query === null){
             $query = $this->getQuery();
         }
-
 
         $builder = $this->queryBuilder(null,$query);
         $data = $builder->get();

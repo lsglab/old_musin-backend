@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+/*namespace App\Http\Controllers;
 
 use App\Http\Controllers\generated\PermissionController as GeneratedPermissionController;
 use App\Models\generated\Permission;
@@ -126,4 +126,4 @@ class PermissionController extends GeneratedPermissionController{
             }
         }
     }
-}
+}*/

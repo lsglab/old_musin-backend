@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+/*namespace App\Http\Controllers;
 
 use App\Http\Controllers\generated\EntryPermissionController as GeneratedEntryPermissionController;
 use App\Models\generated\EntryPermission;
@@ -163,4 +163,4 @@ class EntryPermissionController extends GeneratedEntryPermissionController{
             }
         }
     }
-}
+}*/
