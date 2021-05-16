@@ -5,40 +5,32 @@ namespace App\Models\Base;
 use Illuminate\Database\Eloquent\Model;
 use App\Tables\User;
 
-class BaseModel extends Model{
-
-    public $t_table;
+class BaseModel extends Model implements ModelInterface{
     //this is the instance of the Table class
-    protected $hidden = [];
-    protected $fillable = [];
-    protected $casts = [];
-    protected $attributes = [];
+    public $t_table;
+    //protected $attributes = [];
     //this is the table name, used by eloquent
-    protected $table;
 
-    public function __construct(){
+    public function __construct(array $attributes = []){
         $this->hidden = $this->t_table->hidden;
         $this->fillable = $this->t_table->fillable;
         $this->casts = $this->t_table->casts;
         $this->attributes = $this->t_table->attributes;
         $this->table = $this->t_table->table;
 
-        /*echo "hidden";
-        var_dump($this->t_table->hidden);
-        echo "fillable";
-        var_dump($this->t_table->fillable);
-        echo "casts";
-        var_dump($this->t_table->casts);
-        echo "attributes";
-        var_dump($this->t_table->attributes);*/
+        parent::__construct($attributes);
     }
 
     public function getRelation($name){
-        $relation = array_filter($this->_table->relations,function($value){
+        $relation = array_values(array_filter($this->t_table->relations,function($value) use ($name){
             return $value->getFunctionName() === $name;
-        });
-        if($relation !== undefined){
+        }));
+
+        if(count($relation) > 0){
+            $relation = $relation[0];
             return $relation->get($this);
         }
+
+        return [];
     }
 }

@@ -19,7 +19,7 @@
 					$table->timestamps();
 					$table->string('action');
 					$table->foreignId('role_id');
-					$table->foreignId('subject_id');$table->unique(['action','role_id','subject_id']);
+					$table->string('table');$table->unique(['action','role_id','table']);
 
                 });
             }

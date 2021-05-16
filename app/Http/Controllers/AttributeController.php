@@ -25,7 +25,7 @@ class AttributeController extends MainController
             'relation' => 'string|exists:subjects.id',
             'relation_type' => 'required_with:relation|string|in:has_many,belongs_to,polymorphic_belongs_to,polymorphic_has_many',
             'enum' => 'required_if:type,enum|string|',
-            'function_name' => 'string',
+            'functionName' => 'string',
             'unique' => 'boolean',
             'identifier' => 'boolean',
         ];

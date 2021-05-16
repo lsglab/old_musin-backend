@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use App\Models\Role;
-use App\Http\Controllers\MainController;
+use App\Http\Controllers\Base\MainController;
+use App\Tables\RoleTable;
+use App\Http\Validators\RoleValidator;
+use Illuminate\Database\Eloquent\Builder;
 
+class RoleController extends MainController{
 
-class RoleController extends MainController;
-{
     public function __construct(){
+        $this->table = new RoleTable();
+        $this->validator = new RoleValidator();
         parent::__construct();
     }
 
-    function read_self($query = null){
+    /*function read_self($query = null){
         $user = auth()->user();
 
         $builder = Role::where('id',$user->role->id);
@@ -23,5 +24,5 @@ class RoleController extends MainController;
 
         $data = $builder->get();
         return $data;
-    }
+    }*/
 }

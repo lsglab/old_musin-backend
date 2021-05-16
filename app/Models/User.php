@@ -3,14 +3,35 @@
 namespace App\Models;
 
 use App\Models\Base\BaseModel;
-use App\Tables\User as UserTable;
+use App\Models\Base\ModelInterface;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Tables\UserTable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends BaseModel implements JWTSubject{
+class User extends Authenticatable implements JWTSubject,ModelInterface{
+    public $t_table;
 
-    public function __construct(){
+    public function __construct(array $attributes = []){
         $this->t_table = new UserTable();
-        parent::__construct();
+        $this->hidden = $this->t_table->hidden;
+        $this->fillable = $this->t_table->fillable;
+        $this->casts = $this->t_table->casts;
+        $this->attributes = $this->t_table->attributes;
+        $this->table = $this->t_table->table;
+        parent::__construct($attributes);
+    }
+
+    public function getRelation($name){
+        $relation = array_values(array_filter($this->t_table->relations,function($value) use ($name){
+            return $value->getFunctionName() === $name;
+        }));
+
+        if(count($relation) > 0){
+            $relation = $relation[0];
+            return $relation->get($this);
+        }
+
+        return [];
     }
 
     public function getJWTIdentifier(){
@@ -19,34 +40,5 @@ class User extends BaseModel implements JWTSubject{
 
     public function getJwtCustomClaims(){
         return [];
-    }
-
-    public function getAuthIdentifierName() : string{
-        return $this->getKeyName();
-    }
-
-    public function getAuthIdentifier() : string{
-        return $this->{$this->getAuthIdentifierName()};
-    }
-
-    public function getAuthPassword(){
-        return $this->password;
-    }
-
-    public function getRememberToken(){
-        if (! empty($this->getRememberTokenName())) {
-            return (string) $this->{$this->getRememberTokenName()};
-        }
-    }
-
-    public function setRememberToken($value){
-        if (! empty($this->getRememberTokenName())) {
-            $this->{$this->getRememberTokenName()} = $value;
-        }
-    }
-
-    public function getRememberTokenName()
-    {
-        return $this->t_table->rememberTokenName;
     }
 }

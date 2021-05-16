@@ -7,20 +7,17 @@ class PolymorphicBelongsTo extends Relation{
 
     public string $polymorphic_type;
 
-    public function __construct($table,$name,$polymorphic_type,$function_name,$object = null){
-        parent::__construct($table,null,$name,'polymorphic_belongs_to',$function_name,$object);
+    public function __construct($table,$name,$polymorphic_type,$functionName,$object = null){
+        parent::__construct($table,null,$name,'polymorphic_belongs_to',$functionName,$object);
         $this->polymorphic_type = $polymorphic_type;
-    }
-
-    private function setFunctionName(){
-        $this->function_name = $function_name;
     }
 
     public function getBaseType(){
         return 'belongs_to';
     }
 
-    public function get($table){
-        return $table->morphTo($this->function_name,$this->polymorphic_type,$this->name);
+    public function get($model){
+        $this->getForeignTable();
+        return $model->morphTo($this->functionName,$this->polymorphic_type,$this->name)->get();
     }
 }

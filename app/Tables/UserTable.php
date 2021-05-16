@@ -9,9 +9,8 @@ use App\Tables\Base\Columns\DBString;
 use App\Tables\Base\Columns\RememberToken;
 use App\Tables\Base\Columns\Relation\BelongsTo;
 
-class User extends BaseTable
+class UserTable extends BaseTable
 {
-    public string $path = 'App\Tables\User';
     public string $name = 'user';
 
     public string $rememberTokenName = 'remember_token';
@@ -20,11 +19,11 @@ class User extends BaseTable
         $this->columns = [
             new Email($this),
             new DBString($this,'name',['unique' => true]),
-            new Password($this,'password'),
+            new Password($this),
             new RememberToken($this,$this->rememberTokenName)
         ];
         $this->relations = [
-            new BelongsTo($this,'App\Tables\Role','role_id'),
+            new BelongsTo($this,'App\Tables\RoleTable','role_id'),
         ];
         parent::__construct();
     }

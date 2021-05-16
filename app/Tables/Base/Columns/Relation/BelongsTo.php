@@ -5,19 +5,26 @@ use App\Tables\Base\Columns\Column;
 
 class BelongsTo extends Relation{
 
-    public function __construct($table,$foreign_table,$name,$function_name = null,$object = null){
-        parent::__construct($table,$foreign_table,$name,'belongs_to',$function_name,$object);
+    public function __construct($table,$foreignTable,$name,$functionName = null,$object = null){
+        parent::__construct($table,$foreignTable,$name,'belongs_to',$functionName,$object);
     }
 
-    private function setFunctionName(){
-        $this->function_name = $foreign_table->name;
+    protected function setFunctionName(){
+        $this->functionName = $this->foreignTable->name;
     }
 
     public function getBaseType(){
         return 'belongs_to';
     }
 
-    public function get($table){
-        return $table->belongsTo($this->foreign_table->path,$this->name);
+    public function get($model){
+        $this->getForeignTable();
+        return $model->belongsTo($this->foreignTable->model,$this->name)->get();
+    }
+
+    protected function getTypeValidation($object) : array{
+        $this->getForeignTable();
+        $string = "exists:".$this->foreignTable->table.",id";
+        return [$string];
     }
 }

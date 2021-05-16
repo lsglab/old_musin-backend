@@ -7,20 +7,22 @@ use App\Tables\Base\Columns\Enumeration;
 use App\Tables\Base\Columns\DBString;
 use App\Tables\Base\Columns\Relation\BelongsTo;
 
-class Permission extends BaseTable
+class PermissionTable extends BaseTable
 {
-    public $path = 'App\Models\Permission';
-    public $name = 'permission';
+    public string $name = 'permission';
+    public ?string $parent = 'App\Tables\RoleTable';
 
     public function __construct(){
         $this->columns = [
             new Enumeration($this,
                 'action',['read','read-self','edit','edit-self','delete','delete-self','create'],
                 ['identifier' => true]),
-            new DBString($this,'table',['identifier' => true])
+            new Enumeration($this,'table',
+                ['roles','permissions','users'],
+            ['identifier' => true])
         ];
         $this->relations = [
-            new BelongsTo($this,'App\Tables\Role','role_id',['identifier' => true]),
+            new BelongsTo($this,'App\Tables\RoleTable','role_id',object: ['identifier' => true]),
         ];
         parent::__construct();
     }

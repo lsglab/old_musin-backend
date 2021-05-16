@@ -7,7 +7,7 @@ abstract class BaseValidator{
 
     public $table;
 
-    abstract protected function validate($validation,$object){
+    protected function validate($validation,$object){
         $validator = Validator::make($object,$validation);
 
         if($validator->fails()){
@@ -17,30 +17,33 @@ abstract class BaseValidator{
         return true;
     }
 
-    abstract protected function validation($object,$required) : array{
+    protected function editValidation($object) : array{
+        $validation = [];
         $fillable = $this->table->getFillable();
-        $array = [];
-
-
+        foreach($fillable as $column){
+            $validation[$column->getDatabaseColumnName()] = $column->editValidation($object);
+        }
+        return $validation;
     }
 
-    abstract protected function edit_validation($object) : array{
-
+    protected function createValidation($object) : array{
+        $validation = [];
+        $fillable = $this->table->getFillable();
+        foreach($fillable as $column){
+            $validation[$column->getDatabaseColumnName()] = $column->createValidation($object);
+        }
+        return $validation;
     }
 
-    abstract protected function create_validation($object) : array{
+    public function validateEdit($object){
+        $validation = $this->editValidation($object);
 
+        return $this->validate($validation,$object->toArray());
     }
 
-    public function validate_edit($object){
-        $validation = $this->create_edit_validation($edit);
+    public function validateCreate($object){
+        $validation = $this->createValidation($object);
 
-        return $this->validateRequest($validation,$object);
-    }
-
-    public function validate_create($object){
-        $validation = $this->create_create_validation($object);
-
-        return $this->validateRequest($validation,$object);
+        return $this->validate($validation,$object);
     }
 }

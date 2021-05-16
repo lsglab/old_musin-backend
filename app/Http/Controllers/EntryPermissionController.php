@@ -64,8 +64,8 @@ class EntryPermissionController extends GeneratedEntryPermissionController{
         foreach($subject->children as $child){
             $relation = $this->get_relation($subject,$child->id);
 
-            $function_name = $relation->function_name;
-            $values = $subject->$function_name;
+            $functionName = $relation->functionName;
+            $values = $subject->$functionName;
 
             foreach($values as $value){
                 $find = $this->findPermission($child->id,$entry->role_id,$entry->action,$value->id);
@@ -105,9 +105,9 @@ class EntryPermissionController extends GeneratedEntryPermissionController{
 
         foreach($subject->children as $child){
             $relation = $this->get_relation($subject,$child->id);
-            $function_name = $relation->function_name;
+            $functionName = $relation->functionName;
 
-            $values = $subject->$function_name;
+            $values = $subject->$functionName;
 
             if($values === null){
                 continue;

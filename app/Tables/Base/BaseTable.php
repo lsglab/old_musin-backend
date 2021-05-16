@@ -10,14 +10,14 @@ use App\Tables\User;
 class BaseTable extends Table{
 
     public function __construct($parent = null,$children = []){
-        parent::__construct($parent,$children);
         $this->defaultColumns();
+        parent::__construct($parent,$children);
     }
 
     private function defaultColumns(){
-        $this->relations[] = new BelongsTo($this,'App\Tables\User','creator_id','created_by');
-        $this->columns[] = new Id($this);
-        $this->columns[] = new Timestamp($this,'created_at');
-        $this->columns[] = new Timestamp($this,'updated_at');
+        array_push($this->relations,new BelongsTo($this,'App\Tables\UserTable','creator_id','created_by',object: ['required' => false]));
+        array_push($this->columns,new Id($this));
+        array_push($this->columns,new Timestamp($this,'created_at'));
+        array_push($this->columns,new Timestamp($this,'updated_at'));
     }
 }

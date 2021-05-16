@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Tables\Base\Columns;
+use Illuminate\Validation\Rule;
+use App\Rules\CompositeUnique;
 
 class Column{
 
@@ -35,9 +37,9 @@ class Column{
         $this->assignIfNotNull($object,'default');
     }
 
-    private function assignIfNotNull($object,$var){
-        if($object !== null && $object->$key != null){
-            $this->$var = $object->$var;
+    private function assignIfNotNull($object,$key){
+        if($object !== null && array_key_exists($key,$object)){
+            $this->$key = $object[$key];
         }
     }
 
@@ -51,8 +53,70 @@ class Column{
         return false;
     }
 
+    public function modifyValue($value){
+        return $value;
+    }
+
+    protected function isRequired($required,$object) : array{
+        if($required){
+            return ['required'];
+        } else {
+            return ['nullable'];
+        }
+    }
+
+    protected function isUnique($unique,$exists,$object) : array{
+        if($unique && !$exists){
+            $string = "unique:".$this->table->table;
+            return [$string];
+        }
+        if($unique && $exists){
+            $rule = Rule::unique($this->table->table)->ignore($object->id);
+            return [$rule];
+        }
+
+        return [];
+    }
+
+    protected function isIdentifier($identifier) : array{
+        if($identifier){
+            $fillable = $this->table->getFillable();
+            $identifiers = array_map(function($value){
+                return $value->getDatabaseColumnName();
+            },array_filter($fillable,function($value){
+                return $value->identifier === true;
+            }));
+
+            $print = implode(',',$identifiers);
+
+            $composite = new CompositeUnique($this->table->table,$identifiers);
+            return [$composite];
+        }
+        return [];
+    }
+
+    public function editValidation($object) : array{
+        $required = $this->isRequired(false,$object);
+        $type = $this->getTypeValidation($object);
+        $unique = $this->isUnique($this->unique,true,$object);
+        $identifier = $this->isIdentifier($this->identifier);
+
+        $validation = array();
+        return array_merge($validation,$required,$type,$unique,$identifier);
+    }
+
+    public function createValidation($object) : array{
+        $required = $this->isRequired($this->required,$object);
+        $type = $this->getTypeValidation($object);
+        $unique = $this->isUnique($this->unique,false,$object);
+        $identifier = $this->isIdentifier($this->identifier);
+
+        $validation = array();
+        return array_merge($validation,$required,$type,$unique,$identifier);
+    }
+
     //the type specific validation for each column
-    public function getValidation() : array{
+    protected function getTypeValidation($object) : array{
         return [$this->type];
     }
 }

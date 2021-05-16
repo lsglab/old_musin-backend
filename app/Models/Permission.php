@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Models\Base\BaseModel;
-use App\Tables\Permission as PermissionTable;
+use App\Tables\PermissionTable;
 
 class Permission extends BaseModel{
 
-    public function __constructor(){
+    public function __construct(array $attributes = []){
         $this->t_table = new PermissionTable();
-        parent::__construct();
+        parent::__construct($attributes);
     }
 }

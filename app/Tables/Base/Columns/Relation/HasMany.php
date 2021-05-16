@@ -5,12 +5,12 @@ use App\Tables\Base\Columns\Column;
 
 class HasMany extends Relation{
 
-    public function __construct($model,$foreign_model,$name,$function_name = null,$object = null){
-        parent::__construct($model,$foreign_model,$name,'has_many',$function_name,$object);
+    public function __construct($model,$foreignTable,$name,$functionName = null,$object = null){
+        parent::__construct($model,$foreignTable,$name,'has_many',$functionName,$object);
     }
 
-    private function setFunctionName(){
-        $this->function_name = $foreign_model->plural;
+    protected function setFunctionName(){
+        $this->functionName = $this->foreignTable->plural;
     }
 
     public function getBaseType(){
@@ -18,6 +18,9 @@ class HasMany extends Relation{
     }
 
     public function get($model){
-        return $model->hasMany($this->foreign_model->path,$this->name);
+        $this->getForeignTable();
+        $data = $model->hasMany($this->foreignTable->model,$this->name)->get();
+
+        return $data;
     }
 }

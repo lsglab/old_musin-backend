@@ -8,9 +8,8 @@ use App\Tables\Base\Columns\DBString;
 use App\Tables\Base\Columns\Relation\HasMany;
 use App\Tables\Base\Columns\Relation\BelongsTo;
 
-class Role extends BaseTable
+class RoleTable extends BaseTable
 {
-    public string $path = 'App\Models\Role';
     public string $name = 'role';
 
     public function __construct(){
@@ -19,8 +18,8 @@ class Role extends BaseTable
             new DBString($this,'description',['required' => false]),
         ];
         $this->relations = [
-            new Boolean($this,'role',['required' => false]),
-            new HasMany($this,'App\Tables\User','role_id'),
+            new HasMany($this,'App\Tables\UserTable','role_id'),
+            new HasMany($this,'App\Tables\PermissionTable','role_id'),
         ];
         parent::__construct();
     }

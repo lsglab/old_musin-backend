@@ -6,35 +6,42 @@ use App\Tables\Base\Columns\Column;
 class Relation extends Column{
 
     //path to the foreign table which it has a relation with;
-    public string $foreign_table;
+    public $foreignTable;
     //the type of relation. Valid types are: has_many,belongs_to,polymorphic_has_many,polymorphic_belongs_to
     public string $relation_type;
     /*the name of relation it shoudl be accessed with (e.g if the roles as many users than the
     function name should be "users")*/
-    public string $function_name;
+    public ?string $functionName;
 
-    public function __construct($table,$foreign_table,$name,$relation_type,$function_name = null,$object=null){
-        parent::__construct($table,$name,'relation',$object=null);
-        $this->foreign_table = $foreign_table;
+    public function __construct($table,$foreignTable,$name,$relation_type,$functionName = null,$object=null){
+        parent::__construct($table,$name,'relation',$object);
+        $this->foreignTable = $foreignTable;
         $this->relation_type = $relation_type;
-        $this->setFunctionName($function_name);
+        $this->functionName = $functionName;
     }
 
-    private function instanciateForeignModel(){
-        if($this->foreign_table !== null){
-            $this->foreign_table = new $this->foreign_table;
+    protected function getForeignTable(){
+        if($this->foreignTable !== null && gettype($this->foreignTable) === 'string'){
+            $this->foreignTable = new $this->foreignTable;
         }
+        return $this->foreignTable;
     }
 
     public function getFunctionName(){
-        $this->foreign_table = new $foreign_table;
-        $this->setFunctionName();
-        return $this->function_name;
+        if($this->functionName === null){
+            $this->getForeignTable();
+            $this->setFunctionName();
+        }
+        return $this->functionName;
     }
 
-    private function setFunctionName($name){}
+    protected function setFunctionName(){}
 
     public function getBaseType(){}
 
-    public function get($table){}
+    public function get($model){}
+
+    protected function getTypeValidation($object) : array{
+        return [];
+    }
 }

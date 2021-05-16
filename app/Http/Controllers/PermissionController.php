@@ -1,19 +1,21 @@
 <?php
 
-/*namespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\generated\PermissionController as GeneratedPermissionController;
-use App\Models\generated\Permission;
-use App\Models\Subject;
+use App\Http\Controllers\Base\MainController;
+use App\Tables\PermissionTable;
+use App\Http\Validators\PermissionValidator;
 use Illuminate\Database\Eloquent\Builder;
 
-class PermissionController extends GeneratedPermissionController{
+class PermissionController extends MainController{
 
     public function __construct(){
+        $this->table = new PermissionTable();
+        $this->validator = new PermissionValidator();
         parent::__construct();
     }
 
-    function read($query = null){
+    /*function read($query = null){
         $builder = $this->getDefaultBuilder();
 
         $builder = $this->queryBuilder($builder,$query);
@@ -125,5 +127,5 @@ class PermissionController extends GeneratedPermissionController{
                 }
             }
         }
-    }
-}*/
+    }*/
+}
