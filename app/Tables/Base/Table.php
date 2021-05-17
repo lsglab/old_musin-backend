@@ -134,7 +134,7 @@ abstract class Table
         $array = $this->getAll();
 
         $column = array_filter($array,function($value) use ($name){
-            return $value->getDatabaseColumnName() === $name;
+            return $value->getColumnName() === $name;
         });
 
         if(count($column) > 0){
@@ -144,9 +144,31 @@ abstract class Table
         return null;
     }
 
-    private function mapByColumnName($array){
+    //returns all columns that are in the table;
+    public function getTableColumns() : array{
+        $relations = array_filter($this->relations,function($value){
+            return $value->getBaseType() === 'belongs_to';
+        });
+
+        return array_values(array_merge($this->columns,$relations));
+    }
+
+    public function getIdentifiers() : array{
+        $columns = $this->getTableColumns();
+        return array_filter($columns,function($value){
+            return $value->identifier === true;
+        });
+    }
+
+    public function getColumnNames(array $array) : array{
         return array_values(array_map(function($value){
-            return $value->getDatabaseColumnName();
+            return $value->getColumnName();
+        },$array));
+    }
+
+    private function mapByColumnName($array) : array{
+        return array_values(array_map(function($value){
+            return $value->getColumnName();
         },$array));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Tables\Base\Columns;
 use Illuminate\Validation\Rule;
 use App\Rules\CompositeUnique;
+use Illuminate\Database\Schema\Blueprint;
 
 abstract class Column{
 
@@ -25,10 +26,9 @@ abstract class Column{
     // a default value for the column, can be of any type
     public $default = null;
 
-    public function __construct($table,$name,$type,$object=null){
+    public function __construct($table,$name,$object=null){
         $this->table = $table;
         $this->name = $name;
-        $this->type = $type;
         $this->assignIfNotNull($object,'unique');
         $this->assignIfNotNull($object,'required');
         $this->assignIfNotNull($object,'identifier');
@@ -44,7 +44,7 @@ abstract class Column{
     }
 
     //this function should return the name of the column that is in the database
-    public function getDatabaseColumnName() : string{
+    public function getColumnName() : string{
         return $this->name;
     }
 
@@ -80,14 +80,7 @@ abstract class Column{
 
     protected function isIdentifier($identifier) : array{
         if($identifier){
-            $fillable = $this->table->getFillable();
-            $identifiers = array_map(function($value){
-                return $value->getDatabaseColumnName();
-            },array_filter($fillable,function($value){
-                return $value->identifier === true;
-            }));
-
-            $print = implode(',',$identifiers);
+            $identifiers = $this->table->getColumnNames($this->table->getIdentifiers());
 
             $composite = new CompositeUnique($this->table->table,$identifiers);
             return [$composite];
@@ -120,7 +113,18 @@ abstract class Column{
         return [$this->type];
     }
 
+    protected function createDBColumnType(Blueprint $table){
+        return $table;
+    }
+
     public function createDBColumn($table){
-        return null;
+        $table = $this->createDBColumnType($table);
+        if($this->unique){
+            $table = $table->unique();
+        }
+        if(!$this->required){
+            $table = $table->nullable();
+        }
+        return $table;
     }
 }

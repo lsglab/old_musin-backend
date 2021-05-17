@@ -13,14 +13,12 @@ class UserTable extends BaseTable
 {
     public string $name = 'user';
 
-    public string $rememberTokenName = 'remember_token';
-
     public function __construct(){
         $this->columns = [
             new Email($this),
             new DBString($this,'name',['unique' => true]),
             new Password($this),
-            new RememberToken($this,$this->rememberTokenName)
+            new RememberToken($this)
         ];
         $this->relations = [
             new BelongsTo($this,'App\Tables\RoleTable','role_id'),

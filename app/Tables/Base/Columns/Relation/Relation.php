@@ -14,7 +14,8 @@ abstract class Relation extends Column{
     public ?string $functionName;
 
     public function __construct($table,$foreignTable,$name,$relation_type,$functionName = null,$object=null){
-        parent::__construct($table,$name,'relation',$object);
+        parent::__construct($table,$name,$object);
+        $this->type = 'relation';
         $this->foreignTable = $foreignTable;
         $this->relation_type = $relation_type;
         $this->functionName = $functionName;

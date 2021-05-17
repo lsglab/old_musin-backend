@@ -1,36 +1,11 @@
 <?php
 
-        use Illuminate\Database\Migrations\Migration;
-        use Illuminate\Database\Schema\Blueprint;
-        use Illuminate\Support\Facades\Schema;
+use Database\Base\BaseMigration;
+use App\Tables\PermissionTable;
 
-        class CreatePermissionsTable extends Migration
-        {
-            /**
-             * Run the migrations.
-             *
-             * @return void
-             */
-            public function up()
-            {
-                Schema::create('permissions', function (Blueprint $table) {
-                    					$table->integer('creator_id');
-					$table->id();
-					$table->timestamps();
-					$table->string('action');
-					$table->foreignId('role_id');
-					$table->string('table');$table->unique(['action','role_id','table']);
+class CreatePermissionsTable extends BaseMigration{
 
-                });
-            }
-
-            /**
-             * Reverse the migrations.
-             *
-             * @return void
-             */
-            public function down()
-            {
-                Schema::dropIfExists('permissions');
-            }
-        }
+    public function __construct(){
+        $this->table = new PermissionTable();
+    }
+}

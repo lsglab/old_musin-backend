@@ -1,34 +1,11 @@
 <?php
 
-        use Illuminate\Database\Migrations\Migration;
-        use Illuminate\Database\Schema\Blueprint;
-        use Illuminate\Support\Facades\Schema;
+use Database\Base\BaseMigration;
+use App\Tables\RoleTable;
 
-        class CreateRolesTable extends Migration
-        {
-            /**
-             * Run the migrations.
-             *
-             * @return void
-             */
-            public function up()
-            {
-                Schema::create('roles', function (Blueprint $table) {
-                    					$table->integer('creator_id');
-					$table->id();
-					$table->timestamps();
-					$table->string('name');
-					$table->string('description')->nullable();
-                });
-            }
+class CreateRolesTable extends BaseMigration{
 
-            /**
-             * Reverse the migrations.
-             *
-             * @return void
-             */
-            public function down()
-            {
-                Schema::dropIfExists('roles');
-            }
-        }
+    public function __construct(){
+        $this->table = new RoleTable();
+    }
+}

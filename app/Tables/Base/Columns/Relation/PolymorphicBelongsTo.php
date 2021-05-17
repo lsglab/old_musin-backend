@@ -2,6 +2,7 @@
 
 namespace App\Tables\Base\Columns\Relation;
 use App\Tables\Base\Columns\Column;
+use Illuminate\Database\Schema\Blueprint;
 
 class PolymorphicBelongsTo extends Relation{
 
@@ -19,5 +20,10 @@ class PolymorphicBelongsTo extends Relation{
     public function get($model){
         $this->getForeignTable();
         return $model->morphTo($this->functionName,$this->polymorphic_type,$this->name)->get();
+    }
+
+    protected function createDBColumnType(Blueprint $table){
+        $table->string($this->polymorphic_type);
+        return $table->integer($this->name);
     }
 }

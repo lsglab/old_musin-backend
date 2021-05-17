@@ -2,13 +2,14 @@
 
 namespace App\Tables\Base\Columns;
 
-class Enumeration extends Column{
+class Enumeration extends DBString{
 
     //this should be an array with the possible options
     public array $enum = [];
 
     public function __construct($table,$name,$enum,$object=null){
-        parent::__construct($table,$name,'enum',$object);
+        parent::__construct($table,$name,$object);
+        $this->type = 'enum';
         $this->enum = $enum;
     }
 

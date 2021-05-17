@@ -2,6 +2,7 @@
 
 namespace App\Tables\Base\Columns\Relation;
 use App\Tables\Base\Columns\Column;
+use Illuminate\Database\Schema\Blueprint;
 
 class BelongsTo extends Relation{
 
@@ -26,5 +27,9 @@ class BelongsTo extends Relation{
         $this->getForeignTable();
         $string = "exists:".$this->foreignTable->table.",id";
         return [$string];
+    }
+
+    protected function createDBColumnType(Blueprint $table){
+        return $table->integer($this->name);
     }
 }
