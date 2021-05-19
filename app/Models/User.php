@@ -28,7 +28,13 @@ class User extends Authenticatable implements JWTSubject,ModelInterface{
 
         if(count($relation) > 0){
             $relation = $relation[0];
-            return $relation->get($this);
+            $data = $relation->get($this)->values();
+
+            if(count($data) === 1){
+                return $data[0];
+            }
+
+            return $data;
         }
 
         return [];

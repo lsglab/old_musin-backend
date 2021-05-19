@@ -18,7 +18,7 @@ class PermissionTable extends BaseTable
                 'action',['read','read-self','edit','edit-self','delete','delete-self','create'],
                 ['identifier' => true]),
             new Enumeration($this,'table',
-                ['roles','permissions','users'],
+                ['roles','permissions','users','entry_permissions'],
             ['identifier' => true])
         ];
         $this->relations = [

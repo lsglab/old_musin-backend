@@ -73,4 +73,17 @@ class Helper
 
         return $var;
     }
+
+    public static function objectToArray($object,$exclude = []){
+        $vars = get_object_vars($object);
+        $array = [];
+
+        foreach($vars as $key => $value){
+            if(!in_array($key,$exclude)){
+                $array[$key] = $object->$key;
+            };
+        }
+
+        return $array;
+    }
 }

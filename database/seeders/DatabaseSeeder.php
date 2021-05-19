@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         //
         $actions = array('read','edit','create','delete','edit-self','delete-self','read-self');
-        $tables = ['roles','users','permissions'];
+        $tables = ['roles','users','permissions','entry_permissions'];
 
         $admin = Role::create([
             'name' => 'Admin',

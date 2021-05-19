@@ -23,7 +23,7 @@ abstract class BaseValidator{
         $validation = [];
         $fillable = $this->table->getFillable();
         foreach($fillable as $column){
-            $validation[$column->getDatabaseColumnName()] = $column->editValidation($object);
+            $validation[$column->getColumnName()] = $column->editValidation($object);
         }
         return $validation;
     }
@@ -33,7 +33,7 @@ abstract class BaseValidator{
         $validation = [];
         $fillable = $this->table->getFillable();
         foreach($fillable as $column){
-            $validation[$column->getDatabaseColumnName()] = $column->createValidation($object);
+            $validation[$column->getColumnName()] = $column->createValidation($object);
         }
         return $validation;
     }

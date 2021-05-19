@@ -11,7 +11,7 @@ abstract class Table
     //the name of the table
     public string $name;
     //the namespace path of the controller that belongs to this table
-    public ?string $controller;
+    public ?string $controller = null;
     //the namespace path of the model that belongs to this table
     public ?string $model = null;
     //the namespace path of the table (e.g if the class name is User the table is App/Tables/User);
@@ -41,6 +41,8 @@ abstract class Table
     public $hidden = [];
     // all attribute that appear in the api response
     public $visible = [];
+    // vars that should not be in the json
+    private array $exclude = ['columns','relations','controller','path','model','parent','children'];
 
     public function __construct(){
         $this->setPaths();
@@ -170,5 +172,26 @@ abstract class Table
         return array_values(array_map(function($value){
             return $value->getColumnName();
         },$array));
+    }
+
+    public function toArray(){
+        $array = Helper::objectToArray($this,$this->exclude);
+        $extras = ['columns','relations'];
+        foreach($extras as $ele){
+            $array[$ele] = array_map(function($value){
+                return $value->toArray();
+            },$this->$ele);
+        }
+        $array['parent'] = $this->parent === null ? $this->parent : $this->getTable($this->parent);
+        $array['children'] = [];
+        foreach($this->children as $child){
+            array_push($array['children'],$this->getTable($child));
+        }
+        return $array;
+    }
+
+    private function getTable($string){
+        $table = new $string;
+        return $table->table;
     }
 }

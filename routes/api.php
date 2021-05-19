@@ -3,8 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SubjectController;
-use App\Models\Subject;
+use App\Http\Controllers\TableController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
@@ -34,9 +33,9 @@ Route::group(['middleware' => ['permission']],function(){
     Route::match($verbs,'/entry_permissions',[EntryPermissionController::class,'handle']);
 });
 
-Route::get('subjects',function(){
-    $controller = new SubjectController;
-    return $controller->handle('read');
+Route::get('tables',function(){
+    $controller = new TableController();
+    return $controller->handleRead();
 });
 
 

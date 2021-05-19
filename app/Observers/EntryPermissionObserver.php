@@ -2,69 +2,40 @@
 
 namespace App\Observers;
 
-use App\Models\generated\EntryPermission;
-use App\Models\Subject;
-use App\Console\Commands\Utils\ClassFinder;
 
-class EntryPermissionObserver
+use App\Models\EntryPermission;
+use App\Observers\Base\MainObserver;
+use App\Http\Controllers\TableController;
+
+class EntryPermissionObserver extends MainObserver
 {
-    /**
-     * Handle the EntryPermission "created" event.
-     *
-     * @param  \App\Models\EntryPermission  $entryPermission
-     * @return void
-     */
-    public function creating(EntryPermission $entryPermission)
+
+    public function creating($entryPermission)
     {
-        $subject = Subject::where('id',$entryPermission->subject_id)->first();
-
-        $finder = new ClassFinder();
-        $model = $finder->searchForModel($subject->model);
-
-        $entryPermission->entry_type = $model;
+        $entryPermission = parent::creating($entryPermission);
+        $controller = new TableController();
+        $table = $controller->get($entryPermission->table);
+        $entryPermission->entry_type = $table->model;
         return $entryPermission;
     }
 
-    /**
-     * Handle the EntryPermission "updated" event.
-     *
-     * @param  \App\Models\EntryPermission  $entryPermission
-     * @return void
-     */
-    public function updated(EntryPermission $entryPermission)
+
+    public function updated($entryPermission)
     {
         //
     }
 
-    /**
-     * Handle the EntryPermission "deleted" event.
-     *
-     * @param  \App\Models\EntryPermission  $entryPermission
-     * @return void
-     */
-    public function deleted(EntryPermission $entryPermission)
+    public function deleted($entryPermission)
     {
         //
     }
 
-    /**
-     * Handle the EntryPermission "restored" event.
-     *
-     * @param  \App\Models\EntryPermission  $entryPermission
-     * @return void
-     */
-    public function restored(EntryPermission $entryPermission)
+    public function restored($entryPermission)
     {
         //
     }
 
-    /**
-     * Handle the EntryPermission "force deleted" event.
-     *
-     * @param  \App\Models\EntryPermission  $entryPermission
-     * @return void
-     */
-    public function forceDeleted(EntryPermission $entryPermission)
+    public function forceDeleted($entryPermission)
     {
         //
     }

@@ -96,7 +96,7 @@ class MainController extends BaseController
         foreach($array as $data){
             //resolve all of the tables relations
             foreach($data->t_table->relations as $relation){
-                $table = new $relation->foreignTable;
+                $table = new $relation->getForeignTable();
                 $data = $this->getRelation($data,$relation->getFunctionName(),$table->controller);
             }
         }

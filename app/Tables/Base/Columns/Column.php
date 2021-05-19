@@ -4,6 +4,7 @@ namespace App\Tables\Base\Columns;
 use Illuminate\Validation\Rule;
 use App\Rules\CompositeUnique;
 use Illuminate\Database\Schema\Blueprint;
+use App\Helper;
 
 abstract class Column{
 
@@ -25,6 +26,8 @@ abstract class Column{
     public bool $fillable = true;
     // a default value for the column, can be of any type
     public $default = null;
+    // properties that should not returned in api response;
+    protected array $exclude = ['table'];
 
     public function __construct($table,$name,$object=null){
         $this->table = $table;
@@ -126,5 +129,11 @@ abstract class Column{
             $table = $table->nullable();
         }
         return $table;
+    }
+
+    public function toArray(){
+        $array = Helper::objectToArray($this,$this->exclude);
+        $array['table'] = $this->table->table;
+        return $array;
     }
 }

@@ -6,12 +6,14 @@ use App\Tables\Base\Columns\Column;
 abstract class Relation extends Column{
 
     //path to the foreign table which it has a relation with;
-    public $foreignTable;
+    protected $foreignTable;
     //the type of relation. Valid types are: has_many,belongs_to,polymorphic_has_many,polymorphic_belongs_to
     public string $relation_type;
     /*the name of relation it shoudl be accessed with (e.g if the roles as many users than the
     function name should be "users")*/
     public ?string $functionName;
+
+    protected array $exclude = ['table','foreignTable'];
 
     public function __construct($table,$foreignTable,$name,$relation_type,$functionName = null,$object=null){
         parent::__construct($table,$name,$object);
@@ -44,5 +46,11 @@ abstract class Relation extends Column{
 
     protected function getTypeValidation($object) : array{
         return [];
+    }
+
+    public function toArray(){
+        $array = parent::toArray();
+        $array['foreignTable'] = $this->getForeignTable()->table;
+        return $array;
     }
 }

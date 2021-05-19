@@ -1,20 +1,20 @@
 <?php
 
-/*namespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\generated\EntryPermissionController as GeneratedEntryPermissionController;
-use App\Models\generated\EntryPermission;
-use App\Models\Subject;
-use Illuminate\Database\Eloquent\Builder;
-use App\Console\Commands\Utils\ClassFinder;
+use App\Http\Controllers\Base\MainController;
+use App\Tables\EntryPermissionTable;
+use App\Http\Validators\EntryPermissionValidator;
 
-class EntryPermissionController extends GeneratedEntryPermissionController{
+class EntryPermissionController extends MainController{
 
     public function __construct(){
+        $this->table = new EntryPermissionTable();
+        $this->validator = new EntryPermissionValidator();
         parent::__construct();
     }
 
-    function read($query = null){
+    /*function read($query = null){
         $builder = $this->getDefaultBuilder();
 
         $builder = $this->queryBuilder($builder,$query);
@@ -94,7 +94,7 @@ class EntryPermissionController extends GeneratedEntryPermissionController{
                 }) !== null){
 
                 }
-            }*/
+            }
             return $value->relation === $relation_id;
         })->all())[0];
     }
@@ -162,5 +162,5 @@ class EntryPermissionController extends GeneratedEntryPermissionController{
                 }
             }
         }
-    }
-}*/
+    }*/
+}

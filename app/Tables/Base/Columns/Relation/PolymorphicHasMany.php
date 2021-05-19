@@ -5,7 +5,7 @@ use App\Tables\Base\Columns\Column;
 
 class PolymorphicHasMany extends Relation{
 
-    public function __construct($table,$foreignTable,$name,$functionName,$object = null){
+    public function __construct($table,$foreignTable,$name = null,$functionName = null,$object = null){
         parent::__construct($table,$foreignTable,$name,'polymorphic_has_many',$functionName,$object);
     }
 
@@ -19,6 +19,6 @@ class PolymorphicHasMany extends Relation{
 
     public function get($model){
         $this->getForeignTable();
-        return $model->morhpMany($this->foreignTable->model,$this->name)->get();
+        return $model->morphMany($this->foreignTable->model,$this->name)->get();
     }
 }

@@ -18,7 +18,6 @@ class PolymorphicBelongsTo extends Relation{
     }
 
     public function get($model){
-        $this->getForeignTable();
         return $model->morphTo($this->functionName,$this->polymorphic_type,$this->name)->get();
     }
 
