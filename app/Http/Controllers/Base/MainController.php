@@ -93,11 +93,17 @@ class MainController extends BaseController
     }
 
     function processDataAndRespond($array){
-        foreach($array as $data){
-            //resolve all of the tables relations
-            foreach($data->t_table->relations as $relation){
-                $table = new $relation->getForeignTable();
-                $data = $this->getRelation($data,$relation->getFunctionName(),$table->controller);
+        /*if you add the _norelations attribute to your request no relations will be returned,
+        this decreases the time needed significantly when larger samples are returned
+        (e.g 50 entries without _norelations take about 4.7 seconds, with _norelations 700ms)
+        */
+        if($this->request->getInput('_norelations') === false){
+            foreach($array as $data){
+                //resolve all of the tables relations
+                foreach($data->t_table->relations as $relation){
+                    $table = $relation->getForeignTable($data);
+                    $data = $this->getRelation($data,$relation->getFunctionName(),$table->controller);
+                }
             }
         }
 

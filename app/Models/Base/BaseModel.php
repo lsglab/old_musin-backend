@@ -12,8 +12,8 @@ class BaseModel extends Model implements ModelInterface{
     //this is the table name, used by eloquent
 
     public function __construct(array $attributes = []){
-        $this->hidden = $this->t_table->hidden;
-        $this->fillable = $this->t_table->fillable;
+        $this->hidden = $this->t_table->getColumnNames($this->t_table->getHidden($this->t_table->getTableColumns()));
+        $this->fillable = $this->t_table->getColumnNames($this->t_table->getFillable());
         $this->casts = $this->t_table->casts;
         $this->attributes = $this->t_table->attributes;
         $this->table = $this->t_table->table;

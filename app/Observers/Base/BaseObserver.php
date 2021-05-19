@@ -4,8 +4,12 @@ namespace App\Observers\Base;
 
 abstract class BaseObserver{
 
+    private function getHidden($data){
+        return $data->t_table->getColumnNames($data->t_table->getHidden($data->t_table->getTableColumns()));
+    }
+
     protected function makeVisible($data){
-        $hidden = $data->t_table->hidden;
+        $hidden = $this->getHidden($data);
 
         $data = $data->makeVisible($hidden);
 
@@ -16,7 +20,7 @@ abstract class BaseObserver{
     }
 
     protected function makeHidden($data){
-        $hidden = $data->t_table->hidden;
+        $hidden = $this->getHidden($data);
 
         $data = $data->makeHidden($hidden);
 

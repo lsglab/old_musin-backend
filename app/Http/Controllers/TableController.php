@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Tables\UserTable;
 use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
+use App\Tables\EntryPermissionTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
 use App\Http\Request\Request;
@@ -25,7 +26,8 @@ class TableController extends Controller
             new Group('Authentifizierung',[
                 new UserTable(),
                 new PermissionTable(),
-                new RoleTable()
+                new RoleTable(),
+                new EntryPermissionTable(),
             ])
         ];
         $this->request = new Request();

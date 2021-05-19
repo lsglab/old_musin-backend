@@ -23,7 +23,7 @@ class EntryPermissionTable extends BaseTable
             ['identifier' => true])
         ];
         $this->relations = [
-            new PolymorphicBelongsTo($this,'entry_id','entry_type','entry',object: ['identifier' => true]),
+            new PolymorphicBelongsTo($this,'entry','entry',object: ['identifier' => true]),
             new BelongsTo($this,'App\Tables\RoleTable','role_id',object: ['identifier' => true]),
         ];
         parent::__construct();

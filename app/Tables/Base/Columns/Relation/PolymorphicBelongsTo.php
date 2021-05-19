@@ -2,15 +2,33 @@
 
 namespace App\Tables\Base\Columns\Relation;
 use App\Tables\Base\Columns\Column;
+use App\Tables\Base\Columns\DBString;
 use Illuminate\Database\Schema\Blueprint;
 
 class PolymorphicBelongsTo extends Relation{
 
     public string $polymorphic_type;
 
-    public function __construct($table,$name,$polymorphic_type,$functionName,$object = null){
-        parent::__construct($table,null,$name,'polymorphic_belongs_to',$functionName,$object);
-        $this->polymorphic_type = $polymorphic_type;
+    public function __construct($table,$name,$functionName,$object = null){
+        $this->name = $name."_id";
+        $this->polymorphic_type = $name."_type";
+
+        parent::__construct($table,null,$this->name,'polymorphic_belongs_to',$functionName,$object);
+
+        $string = new DBString($this->table,$this->polymorphic_type,['required' => false,'hidden' => true]);
+        array_push($this->table->columns,$string);
+    }
+
+    public function getForeignTable($entry = null){
+        if($entry === null){
+            throw new Exception('entry cannot be null');
+        }
+
+        $polymorphic_type = $this->polymorphic_type;
+
+        $model = new $entry->$polymorphic_type;
+
+        return $model->t_table;
     }
 
     public function getBaseType(){
@@ -22,7 +40,6 @@ class PolymorphicBelongsTo extends Relation{
     }
 
     protected function createDBColumnType(Blueprint $table){
-        $table->string($this->polymorphic_type);
         return $table->integer($this->name);
     }
 }

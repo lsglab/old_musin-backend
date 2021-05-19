@@ -15,7 +15,7 @@ class QueryBuilder{
     public function __construct(Request $request,$table){
         $this->request = $request;
         $this->table = $table;
-        $this->searchColumns = $this->table->visible;
+        $this->searchColumns = $this->table->getColumnNames($this->table->getVisible($this->table->getTableColumns()));
     }
 
     private function setQuery($query){
@@ -47,16 +47,13 @@ class QueryBuilder{
             /*handle the special keys search and orderBy;
             also check that the key is in the visible columns, if this is not the case the builder will return
             nothing*/
-            if($key==='search'){
+            if($key==='_search'){
                 $this->builder = $this->search($value);
-            } else if($key === 'orderBy'){
+            } else if($key === '_orderBy'){
                 $this->builder = $this->orderBy($value);
             }
             else if(in_array($key,$this->searchColumns)){
                 $this->builder = $this->defaultSearch($key,$value);
-            } else {
-                //just add a query that always fails -> empty array is returned
-                $this->builder = $this->builder->where('id',-1);
             }
         }
 

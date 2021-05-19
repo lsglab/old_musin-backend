@@ -12,7 +12,7 @@ class RoleTable extends BaseTable
 {
     public string $name = 'role';
 
-    public array $children = ['App\Tables\PermissionTable'];
+    public array $children = ['App\Tables\PermissionTable','App\Tables\EntryPermissionTable'];
 
     public function __construct(){
         $this->columns = [
@@ -22,6 +22,7 @@ class RoleTable extends BaseTable
         $this->relations = [
             new HasMany($this,'App\Tables\UserTable','role_id'),
             new HasMany($this,'App\Tables\PermissionTable','role_id'),
+            new HasMany($this,'App\Tables\EntryPermissionTable','role_id','entry_permissions_by_role_id'),
         ];
         parent::__construct();
     }

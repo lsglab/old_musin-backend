@@ -19,8 +19,7 @@ class Request{
 
     public function getInput($input){
         $prop = $this->request->input($input);
-
-        if(gettype($prop) === 'NULL'){
+        if($prop === null){
             return false;
         } else {
             return $prop;

@@ -11,7 +11,7 @@ abstract class Relation extends Column{
     public string $relation_type;
     /*the name of relation it shoudl be accessed with (e.g if the roles as many users than the
     function name should be "users")*/
-    public ?string $functionName;
+    protected ?string $functionName;
 
     protected array $exclude = ['table','foreignTable'];
 
@@ -23,7 +23,7 @@ abstract class Relation extends Column{
         $this->functionName = $functionName;
     }
 
-    public function getForeignTable(){
+    public function getForeignTable($entry = null){
         if($this->foreignTable !== null && gettype($this->foreignTable) === 'string'){
             $this->foreignTable = new $this->foreignTable;
         }

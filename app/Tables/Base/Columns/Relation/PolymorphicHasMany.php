@@ -7,6 +7,7 @@ class PolymorphicHasMany extends Relation{
 
     public function __construct($table,$foreignTable,$name = null,$functionName = null,$object = null){
         parent::__construct($table,$foreignTable,$name,'polymorphic_has_many',$functionName,$object);
+        $this->fillable = false;
     }
 
     protected function setFunctionName(){

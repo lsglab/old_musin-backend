@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Base\MainController;
 use App\Tables\EntryPermissionTable;
+use App\Models\EntryPermission;
 use App\Http\Validators\EntryPermissionValidator;
 
 class EntryPermissionController extends MainController{
@@ -14,121 +15,62 @@ class EntryPermissionController extends MainController{
         parent::__construct();
     }
 
-    /*function read($query = null){
-        $builder = $this->getDefaultBuilder();
-
-        $builder = $this->queryBuilder($builder,$query);
-
-        $data = $builder->get();
-
-        return $data;
+    function findPermission($table,$role_id,$action,$entry_id){
+        return EntryPermission::where('table',$table)
+            ->where('role_id',$role_id)
+            ->where('action',$action)
+            ->where('entry_id',$entry_id)
+            ->first();
     }
 
-    function getDefaultBuilder(){
-        return $this->model::whereHas('subject',function (Builder $query){
-            $query->where('parent_id',null);
-        });
-    }
+    private function getChildEntries($table,$child,$foreignEntry){
+        $relation = array_values(array_filter($table->relations,function($value) use ($foreignEntry,$child){
+            //ignore polymorphic relationships.
+            if($value->relation_type !== 'polymorphic_belongs_to' && $value->relation_type !== 'polymorphic_has_many'){
+                return $value->getForeignTable($foreignEntry)->table === $child->table;
+            }
 
-    function read_self($query = null){
-        $role = auth()->user()->role;
+            return false;
+        }));
 
-        $builder = $this->getDefaultBuilder();
-
-        $builder = $this->queryBuilder($builder,$query);
-
-        return $builder->where('role_id',$role->id)->get();
-    }
-
-    function processDataAndRespond($array){
-        $finder = new ClassFinder();
-
-        foreach($array as &$data){
-            $subject = Subject::find($data->subject_id);
-            $data = $this->getRelation($data,'created_by','App\Http\Controllers\UserController');
-            $data = $this->getRelation($data,'role','App\Http\Controllers\RoleController');
-            $data = $this->getRelation($data,'subject','App\Http\Controllers\SubjectController');
-            $data = $this->getRelation($data,'entry',$finder->searchForController($subject->model));
+        if(count($relation) > 0){
+            $relation = $relation[0];
+            $data = $foreignEntry->getRelation($relation->getFunctionName());
+            return $data;
         }
 
-        return $this->respond([$this->table => $array]);
+        return false;
     }
 
-    function findPermission($subject_id,$role_id,$action,$entry_id){
-        return $this->model::where('subject_id',$subject_id)->where('role_id',$role_id)->where('action',$action)->where('entry_id',$entry_id)->first();
-    }
+    function createOne($create){
+        $entry = $this->createPermission($create['table'],$create['role_id'],$create['action'],$create['entry_id']);
 
-    function delete_one($entry){
-        $subject = $entry->subject;
+        $controller = new TableController();
+        $table = $controller->get($entry->table);
+        $foreignEntry = $table->model::where('id',$entry->entry_id)->first();
 
-        foreach($subject->children as $child){
-            $relation = $this->get_relation($subject,$child->id);
+        foreach($table->children as $child){
+            $childTable = new $child;
 
-            $functionName = $relation->functionName;
-            $values = $subject->$functionName;
+            $childEntries = $this->getChildEntries($table,$childTable,$foreignEntry);
 
-            foreach($values as $value){
-                $find = $this->findPermission($child->id,$entry->role_id,$entry->action,$value->id);
+            if($childEntries === false) continue;
 
-                if($find != null){
-                    $this->delete_one($find);
-                }
-
-                $this->handleExtraActions($child,$entry,function($permission,$subject_id,$role_id,$action,$entry_id){
-                    if($permission !== null){
-                        $permission->delete();
-                    }
-                });
-            }
-        }
-        $entry->delete();
-        return $entry;
-    }
-
-    function get_relation($subject,$relation_id){
-        return array_values($subject->attributes->filter(function($value,$key) use ($relation_id){
-            /*if($value->relation_type === 'polymorphic_belongs_to'){
-                $foreign = Subject::find($relation_id);
-                if($foreign->attributes->filter(function($attribute,$k) {
-                    $attribute->relation ===
-                }) !== null){
-
-                }
-            }
-            return $value->relation === $relation_id;
-        })->all())[0];
-    }
-
-    function create_one($create){
-        $entry = $this->create_permission($create['subject_id'],$create['role_id'],$create['action'],$create['entry_id']);
-        $subject = $entry->subject;
-
-        foreach($subject->children as $child){
-            $relation = $this->get_relation($subject,$child->id);
-            $functionName = $relation->functionName;
-
-            $values = $subject->$functionName;
-
-            if($values === null){
-                continue;
-            }
-
-            foreach($values as $value){
-                $find = $this->findPermission($child->id,$entry->role_id,$entry->action,$value->id);
+            foreach($childEntries as $childEntry){
+                $find = $this->findPermission($childTable->table,$entry->role_id,$entry->action,$childEntry->id);
 
                 if($find === null){
-                    $this->create_one([
-                        'creator_id' => auth()->user()->id,
+                    $this->createOne([
                         'action' => $entry->action,
                         'role_id' => $entry->role_id,
-                        'subject_id' => $child->id,
-                        'entry_id' => $value->id,
+                        'table' => $childTable->table,
+                        'entry_id' => $childEntry->id
                     ]);
                 }
 
-                $this->handleExtraActions($child,$entry,function($permission,$subject_id,$role_id,$action,$entry_id){
+                $this->handleExtraActions($childTable,$entry,$childEntry,function($permission,$table,$role_id,$action,$entry_id){
                     if($permission === null){
-                        $this->create_permission($subject_id,$role_id,$action,$entry_id);
+                        $this->createPermission($table,$role_id,$action,$entry_id);
                     }
                 });
             }
@@ -137,30 +79,29 @@ class EntryPermissionController extends MainController{
         return $entry;
     }
 
-    function create_permission($subject_id,$role_id,$action,$entry_id){
-        return $this->model::create([
-			'creator_id' => auth()->user()->id,
+    function createPermission($table,$role_id,$action,$entry_id){
+        return EntryPermission::create([
 			'action' => $action,
 			'role_id' => $role_id,
-			'subject_id' => $subject_id,
+			'table' => $table,
             'entry_id' => $entry_id
         ]);
     }
 
-    function handleExtraActions($subject,$entry,$callback){
+    function handleExtraActions($table,$entry,$childEntry,$callback){
         $action = explode('-',$entry->action)[0];
 
         if($action === 'edit'){
-            $extraActions = ['create','delete'];
+            $extraActions = ['delete'];
 
             foreach($extraActions as $extraAction){
 
-                $permission = $this->findPermission($subject->id,$entry->role_id,$extraAction,$entry->entry_id);
+                $permission = $this->findPermission($table->table,$entry->role_id,$extraAction,$childEntry->id);
 
                 if(is_callable($callback)){
-                    $callback($permission,$subject->id,$entry->role_id,$extraAction,$entry->entry_id);
+                    $callback($permission,$table->table,$entry->role_id,$extraAction,$childEntry->id);
                 }
             }
         }
-    }*/
+    }
 }

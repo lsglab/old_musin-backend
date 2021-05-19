@@ -31,16 +31,11 @@ abstract class Table
     //this array defines all relations of a table with other tables
     public $relations = [];
 
-    // all fillable attributes
-    public $fillable = [];
+
     // array with all default values for attributes
     public $attributes = [];
     // array that determines what datatype certain attributes should be cast to
     public $casts = [];
-    // attributes that do not appear in the api response
-    public $hidden = [];
-    // all attribute that appear in the api response
-    public $visible = [];
     // vars that should not be in the json
     private array $exclude = ['columns','relations','controller','path','model','parent','children'];
 
@@ -49,11 +44,7 @@ abstract class Table
         $this->name = Helper::toSnakeCase($this->name);
         $this->setPlural();
         $this->setTable();
-        $this->createFillable($this->table);
-        $this->createAttributes();
         $this->createCasts();
-        $this->createHidden();
-        $this->createVisible();
     }
 
     private function setPaths(){
@@ -76,12 +67,7 @@ abstract class Table
         }
     }
 
-    private function createFillable(){
-        $fillable = $this->getFillable();
-        $this->fillable = $this->mapByColumnName($fillable);
-    }
-
-    private function createAttributes(){
+    public function createAttributes(){
         $filter = array_filter($this->columns,function($value){
             return $value->default !== null;
         });
@@ -90,7 +76,7 @@ abstract class Table
         }
     }
 
-    private function createCasts(){
+    public function createCasts(){
         $filter = array_filter($this->columns,function($value){
             $value->getCast() !== false;
         });
@@ -100,40 +86,73 @@ abstract class Table
         }
     }
 
-    private function createVisible(){
-        $visible = array_filter($this->getAll(),function($value){
+    private function arrayIsNull(?array $array,?array $alternative = null) : array{
+        if($array === null){
+            if($alternative === null){
+                return $this->getAll();
+            }
+
+            return $alternative;
+        }
+        return $array;
+    }
+
+    public function getAll() : array{
+        return array_values(array_merge($this->columns,$this->relations));
+    }
+
+    public function getVisible(?array $array = null) : array{
+        $array = $this->arrayIsNull($array);
+
+        return array_values(array_filter($array,function($value){
             return $value->hidden === false;
-        });
-
-        $this->visible = $this->mapByColumnName($visible);
+        }));
     }
 
-    private function createHidden(){
-        $filter = array_filter($this->getAll(),function($value){
+    public function getHidden(?array $array = null) : array{
+        $array = $this->arrayIsNull($array);
+
+        return array_values(array_filter($this->getAll(),function($value){
             return $value->hidden === true;
-        });
-
-        $this->hidden = $this->mapByColumnName($filter);
+        }));
     }
 
-    public function getAll(){
-        return array_merge($this->columns,$this->relations);
-    }
+    public function getFillable(?array $array = null) : array{
+        $array = $this->arrayIsNull($array,$this->getTableColumns());
 
-    public function getFillable(){
-        $fillable = array_filter($this->columns,function($value){
+        return array_values(array_filter($array,function($value){
             return $value->fillable === true;
-        });
-
-        $relations = array_filter($this->relations,function($value){
-            return $value->getBaseType() === 'belongs_to';
-        });
-
-        return array_merge($fillable,$relations);
+        }));
     }
 
-    public function getColumn($name){
-        $array = $this->getAll();
+        //returns all columns that are in the table;
+    public function getTableColumns(?array $array = null) : array{
+        $array = $this->arrayIsNull($array);
+
+        return array_values(array_filter($array,function($value){
+            if($value->type === 'relation'){
+                return $value->getBaseType() === 'belongs_to';
+            }
+            return true;
+        }));
+    }
+
+    public function getIdentifiers(?array $array = null) : array{
+        $array = $this->arrayIsNull($array);
+
+        return array_values(array_filter($array,function($value){
+            return $value->identifier === true;
+        }));
+    }
+
+    public function getColumnNames(array $array) : array{
+        return array_values(array_map(function($value){
+            return $value->getColumnName();
+        },$array));
+    }
+
+    public function getColumn($name,?array $array = null){
+        $array = $this->arrayIsNull($array);
 
         $column = array_filter($array,function($value) use ($name){
             return $value->getColumnName() === $name;
@@ -144,34 +163,6 @@ abstract class Table
         }
 
         return null;
-    }
-
-    //returns all columns that are in the table;
-    public function getTableColumns() : array{
-        $relations = array_filter($this->relations,function($value){
-            return $value->getBaseType() === 'belongs_to';
-        });
-
-        return array_values(array_merge($this->columns,$relations));
-    }
-
-    public function getIdentifiers() : array{
-        $columns = $this->getTableColumns();
-        return array_filter($columns,function($value){
-            return $value->identifier === true;
-        });
-    }
-
-    public function getColumnNames(array $array) : array{
-        return array_values(array_map(function($value){
-            return $value->getColumnName();
-        },$array));
-    }
-
-    private function mapByColumnName($array) : array{
-        return array_values(array_map(function($value){
-            return $value->getColumnName();
-        },$array));
     }
 
     public function toArray(){
@@ -188,10 +179,5 @@ abstract class Table
             array_push($array['children'],$this->getTable($child));
         }
         return $array;
-    }
-
-    private function getTable($string){
-        $table = new $string;
-        return $table->table;
     }
 }

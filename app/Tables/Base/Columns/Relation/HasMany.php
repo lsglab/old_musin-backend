@@ -7,6 +7,7 @@ class HasMany extends Relation{
 
     public function __construct($model,$foreignTable,$name,$functionName = null,$object = null){
         parent::__construct($model,$foreignTable,$name,'has_many',$functionName,$object);
+        $this->fillable = false;
     }
 
     protected function setFunctionName(){
