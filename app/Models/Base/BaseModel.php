@@ -12,31 +12,12 @@ class BaseModel extends Model implements ModelInterface{
     //this is the table name, used by eloquent
 
     public function __construct(array $attributes = []){
-        $this->hidden = $this->t_table->getColumnNames($this->t_table->getHidden($this->t_table->getTableColumns()));
-        $this->fillable = $this->t_table->getColumnNames($this->t_table->getFillable());
-        $this->casts = $this->t_table->casts;
-        $this->attributes = $this->t_table->attributes;
-        $this->table = $this->t_table->table;
+        ModelFunctions::construct($this);
 
         parent::__construct($attributes);
     }
 
     public function getRelation($name){
-        $relation = array_values(array_filter($this->t_table->relations,function($value) use ($name){
-            return $value->getFunctionName() === $name;
-        }));
-
-        if(count($relation) > 0){
-            $relation = $relation[0];
-            $data = $relation->get($this)->values();
-
-            if(count($data) === 1){
-                return $data[0];
-            }
-
-            return $data;
-        }
-
-        return [];
+        return ModelFunctions::getRelation($this,$name);
     }
 }

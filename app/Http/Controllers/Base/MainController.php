@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Base;
 
 use Illuminate\Support\Facades\DB;
 use App\Http\Request\Request;
-use App\Http\Request\QueryBuilder;
+use App\Http\Request\BaseQueryBuilder;
 use App\Helper;
 use App\Models\Permission;
 
@@ -13,6 +13,7 @@ class MainController extends BaseController
 
     public function __construct(){
         parent::__construct();
+        $this->builder = new BaseQueryBuilder($this->request,$this->table);
     }
 
     public function handle($action = null){
