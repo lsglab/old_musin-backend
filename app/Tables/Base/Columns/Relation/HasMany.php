@@ -20,7 +20,7 @@ class HasMany extends Relation{
 
     public function get($model){
         $this->getForeignTable();
-        $data = $model->hasMany($this->foreignTable->model,$this->name)->get();
+        $data = $model->hasMany($this->foreignTable->model,$this->name);
 
         return $data;
     }

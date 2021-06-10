@@ -78,7 +78,7 @@ abstract class Table
 
     public function createCasts(){
         $filter = array_filter($this->columns,function($value){
-            $value->getCast() !== false;
+            $value->getCast() !== '';
         });
 
         foreach($filter as $column){
@@ -173,11 +173,16 @@ abstract class Table
                 return $value->toArray();
             },$this->$ele);
         }
-        $array['parent'] = $this->parent === null ? $this->parent : $this->getTable($this->parent);
+        $array['parent'] = $this->parent === null ? $this->parent : $this->makeTable($this->parent)->table;
         $array['children'] = [];
         foreach($this->children as $child){
-            array_push($array['children'],$this->getTable($child));
+            array_push($array['children'],$this->makeTable($child)->table);
         }
         return $array;
+    }
+
+    private function makeTable($string){
+        $table = new $string;
+        return $table;
     }
 }

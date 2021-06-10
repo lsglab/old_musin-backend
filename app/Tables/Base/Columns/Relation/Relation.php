@@ -8,18 +8,18 @@ abstract class Relation extends Column{
     //path to the foreign table which it has a relation with;
     protected $foreignTable;
     //the type of relation. Valid types are: has_many,belongs_to,polymorphic_has_many,polymorphic_belongs_to
-    public string $relation_type;
+    public string $relationType;
     /*the name of relation it shoudl be accessed with (e.g if the roles as many users than the
     function name should be "users")*/
     protected ?string $functionName;
 
     protected array $exclude = ['table','foreignTable'];
 
-    public function __construct($table,$foreignTable,$name,$relation_type,$functionName = null,$object=null){
+    public function __construct($table,$foreignTable,$name,$relationType,$functionName = null,$object=null){
         parent::__construct($table,$name,$object);
         $this->type = 'relation';
         $this->foreignTable = $foreignTable;
-        $this->relation_type = $relation_type;
+        $this->relationType = $relationType;
         $this->functionName = $functionName;
     }
 
@@ -50,7 +50,15 @@ abstract class Relation extends Column{
 
     public function toArray(){
         $array = parent::toArray();
-        $array['foreignTable'] = $this->getForeignTable()->table;
+        $array['functionName'] = $this->getFunctionName();
+        $array['baseType'] = $this->getBaseType();
+        $foreignTable = $this->getForeignTable();
+        if($foreignTable !== null){
+            $array['foreignTable'] = $foreignTable->table;
+        }
+        else {
+            $array['foreignTable'] = $foreignTable;
+        }
         return $array;
     }
 }

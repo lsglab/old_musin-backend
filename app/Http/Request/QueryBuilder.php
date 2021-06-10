@@ -6,11 +6,11 @@ use App\Http\Request\Request;
 
 class QueryBuilder{
 
-    private Request $request;
-    private $table;
     public $builder;
-    private $query;
-    private array $searchColumns;
+    public Request $request;
+    protected $table;
+    protected $query;
+    protected array $searchColumns;
 
     public function __construct(Request $request,$table){
         $this->request = $request;
@@ -18,7 +18,7 @@ class QueryBuilder{
         $this->searchColumns = $this->table->getColumnNames($this->table->getVisible($this->table->getTableColumns()));
     }
 
-    private function setQuery($query){
+    protected function setQuery($query){
         $this->query = $query;
 
         if($query === null){
@@ -26,7 +26,7 @@ class QueryBuilder{
         }
     }
 
-    private function setBuilder($builder){
+    protected function setBuilder($builder){
         $this->builder = $builder;
 
         if($this->builder === null){
@@ -35,7 +35,7 @@ class QueryBuilder{
         }
     }
 
-    function get($builder = null,$query = null){
+    public function get($builder = null,$query = null){
         $this->setBuilder($builder);
         $this->setQuery($query);
         //if no query is given there is no need to proceed further;

@@ -20,7 +20,7 @@ class BelongsTo extends Relation{
 
     public function get($model){
         $this->getForeignTable();
-        return $model->belongsTo($this->foreignTable->model,$this->name)->get();
+        return $model->belongsTo($this->foreignTable->model,$this->name);
     }
 
     protected function getTypeValidation($object) : array{

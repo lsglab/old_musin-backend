@@ -24,14 +24,18 @@ abstract class Column{
     public bool $hidden = false;
     // if fillable is false it cannot be modified via requests
     public bool $fillable = true;
+    // should this column be used as the default display value for this table
+    public bool $isDisplayValue = false;
     // a default value for the column, can be of any type
-    public $default = null;
+    public mixed $default = null;
     // properties that should not returned in api response;
     protected array $exclude = ['table'];
 
     public function __construct($table,$name,$object=null){
         $this->table = $table;
         $this->name = $name;
+
+        $this->assignDisplayValue($object);
         $this->assignIfNotNull($object,'unique');
         $this->assignIfNotNull($object,'required');
         $this->assignIfNotNull($object,'identifier');
@@ -40,10 +44,21 @@ abstract class Column{
         $this->assignIfNotNull($object,'default');
     }
 
+    private function assignDisplayValue($object){
+        if(!$this->assignIfNotNull($object,'isDisplayValue')){
+            if($this->name === 'name'){
+                $this->isDisplayValue = true;
+            }
+        }
+    }
+
     private function assignIfNotNull($object,$key){
         if($object !== null && array_key_exists($key,$object)){
             $this->$key = $object[$key];
+            return true;
         }
+
+        return false;
     }
 
     //this function should return the name of the column that is in the database
@@ -51,9 +66,9 @@ abstract class Column{
         return $this->name;
     }
 
-    //returns what type the value should be cast to. If it returns false no cast happens;
-    public function getCast(){
-        return false;
+    //returns what type the value should be cast to. If it returns an empty string nothing happens;
+    public function getCast() : string{
+        return '';
     }
 
     public function modifyValue($value){

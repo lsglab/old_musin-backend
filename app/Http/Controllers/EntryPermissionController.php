@@ -26,7 +26,7 @@ class EntryPermissionController extends MainController{
     private function getChildEntries($table,$child,$foreignEntry){
         $relation = array_values(array_filter($table->relations,function($value) use ($foreignEntry,$child){
             //ignore polymorphic relationships.
-            if($value->relation_type !== 'polymorphic_belongs_to' && $value->relation_type !== 'polymorphic_has_many'){
+            if($value->relationType !== 'polymorphic_belongs_to' && $value->relationType !== 'polymorphic_has_many'){
                 return $value->getForeignTable($foreignEntry)->table === $child->table;
             }
 

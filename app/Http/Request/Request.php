@@ -11,6 +11,7 @@ class Request{
         if($request === null){
             $this->request = request();
         }
+        $this->action = $this->getAction();
     }
 
     public function getRequestBody(){

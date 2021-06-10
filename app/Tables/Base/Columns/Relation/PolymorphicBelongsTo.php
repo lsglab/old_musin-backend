@@ -21,7 +21,7 @@ class PolymorphicBelongsTo extends Relation{
 
     public function getForeignTable($entry = null){
         if($entry === null){
-            throw new Exception('entry cannot be null');
+            return null;
         }
 
         $polymorphic_type = $this->polymorphic_type;
@@ -36,7 +36,7 @@ class PolymorphicBelongsTo extends Relation{
     }
 
     public function get($model){
-        return $model->morphTo($this->functionName,$this->polymorphic_type,$this->name)->get();
+        return $model->morphTo($this->functionName,$this->polymorphic_type,$this->name);
     }
 
     protected function createDBColumnType(Blueprint $table){

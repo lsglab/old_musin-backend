@@ -10,9 +10,9 @@ use App\Helper;
 class BaseController extends Controller
 {
     protected $table;
-    protected QueryBuilder $builder;
+    public QueryBuilder $builder;
     protected $validator;
-    protected Request $request;
+    public Request $request;
 
     public function __construct(){
         $this->request = new Request();
@@ -137,7 +137,7 @@ class BaseController extends Controller
         $editData = $this->request->getRequestBody();
         // remove any keys from the request body that are not fillable
         foreach($editData as $key => $value){
-            if(!in_array($key,$this->table->fillable)){
+            if(!in_array($key,$this->table->getColumnNames($this->table->getFillable($this->table->getTableColumns())))){
                 unset($editData[$key]);
             }
         }
@@ -207,8 +207,11 @@ class BaseController extends Controller
             //find the relation between the subject and the children
             //this method of deleting the children assumes that there is a relationship
             //between the parent and children
-            $relation = array_filter($table->relations,function($value){
-                return $value->getForeignTable()->table === $this->table->table;
+            $relation = array_filter($table->relations,function($value) use ($entry){
+                if($value->relationType === 'polymorphic_belongs_to' || $value->relationType === 'polymorphic_has_many'){
+                    return false;
+                }
+                return $value->getForeignTable($entry)->table === $this->table->table;
             });
 
             if(count($relation) > 0){
@@ -256,7 +259,7 @@ class BaseController extends Controller
 
     protected function validationResponse($response){
         if($response !== true){
-            return $this->respond($response);
+            return $this->respond($response,400);
         }
         return true;
     }

@@ -9,6 +9,7 @@ use App\Tables\UserTable;
 use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
 use App\Tables\EntryPermissionTable;
+use App\Tables\FileTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
 use App\Http\Request\Request;
@@ -17,18 +18,17 @@ use App\Helper;
 
 class TableController extends Controller
 {
-    public array $tables;
-    private array $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
-    private Request $reqeust;
+    protected array $tables = [];
+    protected array $actions = ['read','read-self','edit','edit-self','delete','delete-self','create'];
+    protected Request $reqeust;
 
     public function __construct(){
-        $this->groups = [
-            new Group('Authentifizierung',[
-                new UserTable(),
-                new PermissionTable(),
-                new RoleTable(),
-                new EntryPermissionTable(),
-            ])
+        $this->tables = [
+            new UserTable(),
+            new RoleTable(),
+            new EntryPermissionTable(),
+            new PermissionTable(),
+            new FileTable()
         ];
         $this->request = new Request();
     }
@@ -38,56 +38,47 @@ class TableController extends Controller
     }
 
     public function get($table = null){
-        $tables = array();
+        if($table === null || $table === false) return $this->tables;
 
-        foreach($this->groups as $group){
-            $tables = array_values(array_merge($tables,$group->tables));
+        $filter = array_values(array_filter($this->tables,function($value) use ($table){
+            return $value->table === $table;
+        }));
+
+        if(count($filter) > 0){
+            return $filter[0];
         }
 
-        if($table !== null){
-            $filter = array_values(array_filter($tables,function($value) use ($table){
-                return $value->table === $table;
-            }));
-
-            if(count($filter) > 0){
-                return $filter[0];
-            }
-
-            return null;
-        }
-
-        return $tables;
+        return null;
     }
 
-    protected function read($query = null){
+    protected function getPermissions(){
         $roleId = auth()->user()->role_id;
         //get all permissions where this role has the read permission
-        $permissions = Permission::where('role_id',$roleId)
+        return Permission::where('role_id',$roleId)
             ->where(function($query){
                 $query->where('action','read');
                 $query->orWhere('action','read-self');
             })
             ->get();
+    }
 
-        $specific = $query['table'] || $this->request->getInput('table');
+    protected function read() : array{
+        $specific = $this->request->getInput('table');
+        $tables = $this->get($specific);
+        $permissions = $this->getPermissions();
 
-        foreach($this->groups as $group){
-            foreach($group->tables as $table){
-                $filter = $permissions->filter(function($value,$key) use ($table,$specific){
-                    if($specific === false){
-                        return $value->table === $table->table;
-                    }
+        if($tables === null) return [];
+        if(!is_array($tables)) $tables = array($tables);
 
-                    return $value->table === $table->table && $value->table === $specific;
-                });
+        return array_filter($tables,function($table) use ($permissions){
+            return $permissions->filter(function($permission) use ($table){
+                return $permission->table === $table->table;
+            })->count() > 0;
+        });
 
-                if($filter->count() === 0){
-                    $group->removeTable($table->table);
-                }
-            }
-        }
+        if(!is_array($tables)) $tables = array($tables);
 
-        return $this->groups;
+        return $tables;
     }
 
     public function handleRead(){
@@ -96,79 +87,54 @@ class TableController extends Controller
     }
 
     protected function afterRead($data){
-        return $this->processDataAndRespond($data);
-    }
-
-    protected function processDataAndRespond($data){
-        $role = auth()->user()->getRelation('role');
-
-        foreach($data as $group){
-            foreach($group->tables as &$table){
-                $permissions = array();
-
-                foreach($this->actions as $action){
-                    $filter = $role->getRelation('permissions')->filter(function($value,$key) use ($action,$table){
-                        return $value->action === $action && $value->table === $table->table;
-                    });
-
-                    if(count($filter) > 0){
-                        if($action === 'create'){
-                            $permissions[$action] = true;
-                        } else {
-
-                            $controller = new $table->controller;
-
-                            $self = $action === 'edit-self' || $action === 'read-self' || $action === 'delete-self';
-                            $ids;
-
-                            if($self){
-                                $ids = $controller->readSelf(false);
-                            } else {
-                                $ids = $controller->read(false);
-                            }
-                            $ids = $ids->map(function($v,$k){
-                                return $v->id;
-                            });
-
-                            $permissions[$action] = $ids;
-                        }
-                    } else {
-                        $permissions[$action] = false;
-                    }
-                }
-
-                $table->permissions = $permissions;
-            }
-
-            foreach($group->tables as &$ele){
-                $ele = $ele->toArray();
-            }
-
-        }
-
-        if($this->request->getInput('group') === false){
-            $data = array_map(function($value){
-                return $value->tables;
-            },$data);
-        }
-
+        $data = $this->processData($data);
         return $this->respond(['tables' => $data]);
     }
-}
 
-class Group{
+    protected function processData(array $array) : array{
+        $role = auth()->user()->role;
 
-    public string $title;
-    public array $tables;
+        foreach($array as &$table){
 
-    public function __construct($title,$tables){
-        $this->title = $title;
-        foreach($tables as $table){
-            $this->tables[$table->table] = $table;
+            $permissions = array();
+
+            foreach($this->actions as $action){
+                $filter = $role->permissions->filter(function($value,$key) use ($action,$table){
+                    return $value->action === $action && $value->table === $table->table;
+                });
+
+                if(count($filter) > 0){
+                    if($action === 'create'){
+                        $permissions[$action] = true;
+                    } else {
+
+                        $controller = new $table->controller;
+                        $baseAction = explode('-',$action)[0];
+                        $controller->builder->request->action = $baseAction;
+
+                        $self = $action === 'edit-self' || $action === 'read-self' || $action === 'delete-self';
+                        $ids;
+
+                        if($self){
+                            $ids = $controller->readSelf(false);
+                        } else {
+                            $ids = $controller->read(false);
+                        }
+                        $ids = $ids->map(function($v,$k){
+                            return $v->id;
+                        });
+
+                        $permissions[$action] = $ids;
+                    }
+                } else {
+                    $permissions[$action] = false;
+                }
+            }
+
+            $table->permissions = $permissions;
+            $table = $table->toArray();
         }
-    }
 
-    public function removeTable(string $name){
-        unset($this->tables[$name]);
+        return $array;
     }
 }

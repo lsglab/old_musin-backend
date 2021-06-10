@@ -20,6 +20,6 @@ class PolymorphicHasMany extends Relation{
 
     public function get($model){
         $this->getForeignTable();
-        return $model->morphMany($this->foreignTable->model,$this->name)->get();
+        return $model->morphMany($this->foreignTable->model,$this->name);
     }
 }

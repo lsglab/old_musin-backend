@@ -11,7 +11,7 @@ class Timestamp extends Column{
         $this->fillable = false;
     }
 
-    public function getCast(){
+    public function getCast() : string{
         return 'date';
     }
 

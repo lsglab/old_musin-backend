@@ -10,7 +10,7 @@ class Date extends Column{
         $this->type = 'date';
     }
 
-    public function getCast(){
+    public function getCast() : string{
         return 'date';
     }
 

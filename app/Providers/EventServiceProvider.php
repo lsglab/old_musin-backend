@@ -8,10 +8,12 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use App\Observers\Base\MainObserver;
 use App\Observers\EntryPermissionObserver;
+use App\Observers\UserObserver;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\EntryPermission;
+use App\Models\File;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -33,9 +35,10 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        User::observe(MainObserver::class);
+        User::observe(UserObserver::class);
         Role::observe(MainObserver::class);
         Permission::observe(MainObserver::class);
+        File::observe(MainObserver::class);
         EntryPermission::observe(EntryPermissionObserver::class);
         //EntryPermission::observe(EntryPermissionObserver::class);
     }

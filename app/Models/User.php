@@ -13,9 +13,24 @@ class User extends Authenticatable implements JWTSubject,ModelInterface{
 
     public function __construct(array $attributes = []){
         $this->t_table = new UserTable();
-
-        ModelFunctions::construct($this);
+        $this->hidden = ModelFunctions::getHidden($this);
+        $this->fillable = ModelFunctions::getFillable($this);
+        $this->attributes = ModelFunctions::getAttributes($this);
+        $this->casts = ModelFunctions::getCasts($this);
+        $this->table = ModelFunctions::getTable($this);
         parent::__construct($attributes);
+    }
+
+    public function entry_permissions(){
+        return $this->getRelation(__FUNCTION__);
+    }
+
+    public function created_by(){
+        return $this->getRelation(__FUNCTION__);
+    }
+
+    public function role(){
+        return $this->getRelation(__FUNCTION__);
     }
 
     public function getRelation($name){

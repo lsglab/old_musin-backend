@@ -10,7 +10,7 @@ class Boolean extends Column{
         $this->type = 'boolean';
     }
 
-    public function getCast(){
+    public function getCast() : string{
         return 'boolean';
     }
 

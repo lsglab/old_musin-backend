@@ -113,7 +113,7 @@ class MainController extends BaseController
 
     function setData($data,$self,$relation){
         //get the data of the model
-        $rel = $data->getRelation($relation);
+        $rel = $data->$relation;
         //filter the two arrays. Only the elements where the ids match are returned
         $return = Helper::getEqualObjectsByKey($rel,$self,'id');
         //set the relation data;
