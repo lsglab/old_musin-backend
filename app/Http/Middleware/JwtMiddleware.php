@@ -30,13 +30,12 @@ class JwtMiddleware extends BaseMiddleware
 
                 return $this->respond(['message' => 'invalid_token'],401);
             } else if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException){
-                error_log("token expored");
                 $refresh_token = $request->cookie('refresh_token');
 
                 if($refresh_token != null){
                     $user = User::where('remember_token',$refresh_token)->first();
                     if($user === null){
-                        return $this->respond(['message' => 'invalid remember_token'],403);
+                        return $this->respond(['message' => 'invalid refresh_token'],403);
                     }
                     $token = auth()->login($user);
                 } else {

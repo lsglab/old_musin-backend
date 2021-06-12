@@ -16,10 +16,10 @@ class getPermission
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next){
+    public function handle($request, Closure $next,$tableName = null){
 
         $action = $this->getAction($request);
-        $table = $this->getPath($request);
+        $table = $tableName === null ?  $this->getPath($request) : $tableName;
         $roleId  = auth()->user()->role_id;
         $permission = $this->getPermission($roleId,$table,$action);
         //if the permission does not exist check for the self permission of the action

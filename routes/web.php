@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\AuthCookie;
+use App\Http\Controllers\FileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,8 +19,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+Route::group(['middleware' => [AuthCookie::class,'permission:files']],function(){
+    $controller = new FileController();
+    Route::get('/uploads/private/{fileName}',function($fileName) use ($controller){
+        return $controller->getFile($fileName);
+    });
+    Route::get('/download/{fileName}',function($fileName) use ($controller){
+        return $controller->downloadFile($fileName);
+    });
+});
 
-require __DIR__.'/auth.php';
+

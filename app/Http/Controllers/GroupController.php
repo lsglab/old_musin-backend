@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Tables\UserTable;
 use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
+use App\Tables\FileTable;
 use App\Tables\EntryPermissionTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
@@ -22,8 +23,11 @@ class GroupController extends TableController{
     public function __construct(){
         $this->groups = [
             new Group('Authentifizierung',[
-                new UserTable(),
-                new RoleTable(),
+                [new UserTable(),'/database/users',],
+                [new RoleTable(),'/database/roles',]
+            ]),
+            new Group('Verwaltung',[
+                [new FileTable(),'/media',]
             ])
         ];
         parent::__construct();
@@ -65,15 +69,18 @@ class Group{
 
     public string $title;
     public array $tables;
+    public array $links;
 
     public function __construct($title,$tables){
         $this->title = $title;
         foreach($tables as $table){
-            $this->tables[$table->table] = $table;
+            $this->tables[$table[0]->table] = $table[0];
+            $this->links[$table[0]->table] = $table[1];
         }
     }
 
     public function removeTable(string $name){
         unset($this->tables[$name]);
+        unset($this->links[$name]);
     }
 }

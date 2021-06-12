@@ -16,10 +16,13 @@ class FileTable extends BaseTable
     public function __construct(){
         $this->columns = [
             new DBString($this,'name',['unique' => true]),
-            new DBString($this,'path',['required' => false]),
+            new DBString($this,'url',['required' => false]),
             new Integer($this,'size'),
-            new DBString($this,'type'),
+            new Enumeration($this,'type',['image/jpeg','image/png']),
             new Boolean($this,'public'),
+            new DBString($this,'disk',['hidden' => true,'required' => false]),
+            new DBString($this,'path',['hidden' => true,'required' => false]),
+            new DBString($this,'location',['hidden' => true,'required' => false]),
             new DBString($this,'description',['required' => false,'default' => ''])
         ];
         parent::__construct();

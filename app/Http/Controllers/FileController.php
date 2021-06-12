@@ -57,22 +57,60 @@ class FileController extends MainController{
 
     protected function deleteOne($entry){
         parent::deleteOne($entry);
-        Storage::delete($entry->path);
+        Storage::disk($entry->disk)->delete($entry->path);
     }
 
     protected function createOne($create = null){
-        $public = 'public';
-        if($create['public'] === false)  $public = 'private';
+        $disk = 'public';
+        if($create['public'] === false)  $disk = 'private';
 
-        $path = $create['file']->storeAs('uploads',$create['name'],$public);
+        $url = $create['file']->storeAs('uploads',$create['name'],$disk);
+
+        $name = $create['name'];
+
+        if(!$create['public']){
+            $url = "uploads/private/$name";
+        }
+
+        $path = "uploads/$name";
+        $location = "app/$disk/$path";
 
         return parent::createOne([
             'name' => $create['name'],
             'description' => $create['description'],
             'size' => $create['size'],
             'type' => $create['type'],
+            'path' => $path,
+            'disk' => $disk,
             'public' => $create['public'],
-            'path' => $path
+            'location' => $location,
+            'url' => $url
         ]);
+    }
+
+    private function getFilePath($fileName){
+        $data = $this->read(['name' => $fileName]);
+
+        if($data->count() > 0){
+            $file = $data->first();
+            $filepath = storage_path($file->location);
+            return $filepath;
+        }
+
+        return false;
+    }
+
+    public function getFile($fileName){
+        $file = $this->getFilePath($fileName);
+
+        if($file !== false) return response()->file($file);
+        abort(404);
+    }
+
+    public function downloadFile($fileName){
+        $file = $this->getFilePath($fileName);
+
+        if($file !== false) return response()->download($file);
+        abort(404);
     }
 }
