@@ -226,9 +226,16 @@ class BaseController extends Controller
     }
 
     protected function create($create = null){
-        //if no data is given take the request body as data;
+        //if no data is given take the request input as data;
         if($create == null){
             $create = $this->request->request->all();
+
+            foreach($this->table->getFillable() as $column){
+                $name = $column->getColumnName();
+                if(array_key_exists($name,$create)){
+                    $create[$name] = $column->cast($create[$name]);
+                }
+            }
         }
         //validate the data
         $validate = $this->validateCreate($create);

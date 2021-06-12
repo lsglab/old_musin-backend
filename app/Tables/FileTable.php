@@ -6,6 +6,7 @@ use App\Tables\Base\BaseTable;
 use App\Tables\Base\Columns\Enumeration;
 use App\Tables\Base\Columns\DBString;
 use App\Tables\Base\Columns\Integer;
+use App\Tables\Base\Columns\Boolean;
 use App\Tables\Base\Columns\Relation\BelongsTo;
 
 class FileTable extends BaseTable
@@ -18,6 +19,7 @@ class FileTable extends BaseTable
             new DBString($this,'path',['required' => false]),
             new Integer($this,'size'),
             new DBString($this,'type'),
+            new Boolean($this,'public'),
             new DBString($this,'description',['required' => false,'default' => ''])
         ];
         parent::__construct();

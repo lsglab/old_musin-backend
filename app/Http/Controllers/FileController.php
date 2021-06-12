@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Base\MainController;
 use App\Tables\FileTable;
 use App\Http\Validators\FileValidator;
+use Illuminate\Support\Facades\Storage;
+use App\Helper;
 
 class FileController extends MainController{
 
@@ -15,51 +17,32 @@ class FileController extends MainController{
     }
 
     protected function handleCreate(){
-
-        if($this->request->request->hasFile('files')){
-            error_log("HASFILE");
-            foreach($this->request->request->file('files') as $file){
-                error_log("hello");
-                $this->create($file);
-            }
+        if($this->request->request->hasFile('file')){
+            $data = $this->create();
+            return Helper::isResponse($data) ? $data : $this->afterCreate([$data]);
         }
 
-        /*
-        foreach($body as $ele){
-            //run the create function for each object
-            $created = $this->create($ele);
-            //if one of them throws and error return;
-            if(Helper::isResponse($created)){
-                return $created;
-            }
-            //push the created ele to the results
-            array_push($data,$created);
-        }
-        */
-
-        return $this->afterCreate([]);
+        return $this->respond(['message' => 'No file attached'],400);
     }
 
-    protected function create($create = null){
-        //validate the data
-        /*
-        $validate = $this->validateCreate($create);
-
-        if($validate !== true){
-            return $validate;
-        }
-        */
-
-        $created = $this->createOne($create);
-
-        return $created;
+    protected function deleteOne($entry){
+        parent::deleteOne($entry);
+        Storage::delete($entry->path);
     }
 
     protected function createOne($create = null){
-        // $this->table->model::create($create);
-        error_log("create $create");
-        $path = $create->storeAs('uploads',$create->getClientOriginalName(),'public');
+        $public = 'public';
+        if($create['public'] === false)  $public = 'private';
 
-        return $create;
+        $path = $create['file']->storeAs('uploads',$create['name'],$public);
+
+        return parent::createOne([
+            'name' => $create['name'],
+            'description' => $create['description'],
+            'size' => $create['size'],
+            'type' => $create['type'],
+            'public' => $create['public'],
+            'path' => $path
+        ]);
     }
 }

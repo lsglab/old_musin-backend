@@ -10,6 +10,10 @@ class DBString extends Column{
         $this->type = 'string';
     }
 
+    public function string($value) : string{
+        return strval($value);
+    }
+
     protected function createDBColumnType(Blueprint $table){
         return $table->string($this->name);
     }

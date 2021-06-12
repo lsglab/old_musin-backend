@@ -14,6 +14,10 @@ class Boolean extends Column{
         return 'boolean';
     }
 
+    public function cast($value) : bool{
+        return $value === 'true' ? true : false;
+    }
+
     protected function createDBColumnType(Blueprint $table){
         return $table->boolean($this->name);
     }
