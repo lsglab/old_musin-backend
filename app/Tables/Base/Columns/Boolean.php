@@ -14,7 +14,7 @@ class Boolean extends Column{
         return 'boolean';
     }
 
-    public function cast($value) : bool{
+    public function castValue($value) : bool{
         return $value === 'true' ? true : false;
     }
 

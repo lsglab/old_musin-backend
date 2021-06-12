@@ -233,7 +233,7 @@ class BaseController extends Controller
             foreach($this->table->getFillable() as $column){
                 $name = $column->getColumnName();
                 if(array_key_exists($name,$create)){
-                    $create[$name] = $column->cast($create[$name]);
+                    $create[$name] = $column->castValue($create[$name]);
                 }
             }
         }

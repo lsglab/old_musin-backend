@@ -71,7 +71,7 @@ abstract class Column{
         return '';
     }
 
-    public function cast($value){
+    public function castValue($value){
         return $value;
     }
 

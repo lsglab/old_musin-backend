@@ -10,7 +10,7 @@ class DBString extends Column{
         $this->type = 'string';
     }
 
-    public function string($value) : string{
+    public function castValue($value) : string{
         return strval($value);
     }
 

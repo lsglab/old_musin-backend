@@ -77,8 +77,8 @@ abstract class Table
     }
 
     public function createCasts(){
-        $filter = array_filter($this->columns,function($value){
-            $value->getCast() !== '';
+        $filter = array_filter($this->columns,function($column){
+            if($column->getCast() !== '') return $column->getCast();
         });
 
         foreach($filter as $column){

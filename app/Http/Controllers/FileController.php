@@ -16,6 +16,36 @@ class FileController extends MainController{
         parent::__construct();
     }
 
+    private function getDefaultBuilder(){
+        $role = auth()->user()->role()->first();
+
+        if(strtolower($role->name) === 'public'){
+            return $this->table->model::where('public',true);
+        }
+
+        return null;
+    }
+
+    public function read($query = null){
+        $builder = $this->getDefaultBuilder();
+
+        return $this->builder->get($builder,$query);
+    }
+
+    public function readSelf($query = null){
+        $user = auth()->user();
+
+        $builder = $this->getDefaultBuilder();
+
+        if($builder === null){
+            $builder = $this->table->model::where('creator_id',$user->id);
+        } else {
+            $builder = $builder->where('creator_id',$user->id);
+        }
+
+        return $this->builder->get($builder,$query);
+    }
+
     protected function handleCreate(){
         if($this->request->request->hasFile('file')){
             $data = $this->create();
