@@ -23,6 +23,19 @@ class BaseController extends Controller
         return response()->json($array,$status);
     }
 
+    protected function getRequestInput(){
+        $data = $this->request->getRequestInput();
+
+        foreach($this->table->getFillable() as $column){
+            $name = $column->getColumnName();
+            if(array_key_exists($name,$data)){
+                $data[$name] = $column->castValue($data[$name]);
+            }
+        }
+
+        return $data;
+    }
+
     public function handle($action = null){
         $this->request = new Request();
         if($action === null){
@@ -113,6 +126,17 @@ class BaseController extends Controller
         return $this->respond([$this->table => $data]);
     }
 
+    protected function removeNotFillable($data){
+        // remove any keys from the data that are not fillable
+        foreach($data as $key => $value){
+            if(!in_array($key,$this->table->getColumnNames($this->table->getFillable($this->table->getTableColumns())))){
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
+    }
+
     public function read($query = null){
         return $this->builder->get(null,$query);
     }
@@ -127,19 +151,18 @@ class BaseController extends Controller
         }
 
         $edit = $edit[0];
+
+        $editData = $this->request->getRequestBody();
+
+        if($editData === null){
+            $editData = $this->getRequestInput();
+        }
+        $editData = $this->removeNotFillable($editData);
         //validate the request data
-        $validate = $this->validateEdit($edit);
+        $validate = $this->validateEdit($edit,$editData);
 
         if($validate !== true){
             return $validate;
-        }
-
-        $editData = $this->request->getRequestBody();
-        // remove any keys from the request body that are not fillable
-        foreach($editData as $key => $value){
-            if(!in_array($key,$this->table->getColumnNames($this->table->getFillable($this->table->getTableColumns())))){
-                unset($editData[$key]);
-            }
         }
 
         $edit = $this->editOne($edit,$editData);
@@ -228,14 +251,7 @@ class BaseController extends Controller
     protected function create($create = null){
         //if no data is given take the request input as data;
         if($create == null){
-            $create = $this->request->request->all();
-
-            foreach($this->table->getFillable() as $column){
-                $name = $column->getColumnName();
-                if(array_key_exists($name,$create)){
-                    $create[$name] = $column->castValue($create[$name]);
-                }
-            }
+            $create = $this->getRequestInput();
         }
         //validate the data
         $validate = $this->validateCreate($create);
@@ -254,8 +270,8 @@ class BaseController extends Controller
         return $this->table->model::create($create);
     }
 
-    protected function validateEdit($object){
-        $response = $this->validator->validateEdit($object);
+    protected function validateEdit($entry,$data){
+        $response = $this->validator->validateEdit($entry,$data);
         return $this->validationResponse($response);
     }
 

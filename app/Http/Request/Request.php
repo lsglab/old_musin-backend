@@ -18,6 +18,11 @@ class Request{
         return json_decode($this->request->getContent(),true);
     }
 
+    public function getRequestInput(){
+        $query = array_keys($this->request->query());
+        return $this->request->except($query);
+    }
+
     public function getInput($input){
         $prop = $this->request->input($input);
         if($prop === null){

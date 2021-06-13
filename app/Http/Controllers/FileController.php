@@ -60,32 +60,71 @@ class FileController extends MainController{
         Storage::disk($entry->disk)->delete($entry->path);
     }
 
-    protected function createOne($create = null){
+    protected function getFileInformation(bool $public,string $name) : array{
         $disk = 'public';
-        if($create['public'] === false)  $disk = 'private';
+        if($public === false)  $disk = 'private';
 
-        $url = $create['file']->storeAs('uploads',$create['name'],$disk);
+        $url = "uploads/$name";
 
-        $name = $create['name'];
-
-        if(!$create['public']){
+        if(!$public){
             $url = "uploads/private/$name";
         }
 
         $path = "uploads/$name";
         $location = "app/$disk/$path";
 
+        return [
+            'disk' => $disk,
+            'url' => $url,
+            'path' => $path,
+            'location' => $location
+        ];
+    }
+
+    protected function createOne($create = null){
+        $info = $this->getFileInformation($create['public'],$create['name']);
+
+        $create['file']->storeAs('uploads',$create['name'],$info['disk']);
+
         return parent::createOne([
             'name' => $create['name'],
             'description' => $create['description'],
             'size' => $create['size'],
             'type' => $create['type'],
-            'path' => $path,
-            'disk' => $disk,
+            'path' => $info['path'],
+            'disk' => $info['disk'],
             'public' => $create['public'],
-            'location' => $location,
-            'url' => $url
+            'location' => $info['location'],
+            'url' => $info['url']
         ]);
+    }
+
+    protected function editOne($entry,$editData){
+        $original = $entry->replicate();
+        $entry = parent::editOne($entry,$editData);
+
+        $info = $this->getFileInformation($entry->public,$entry->name);
+        $entry->disk = $info['disk'];
+        $entry->url = $info['url'];
+        $entry->path = $info['path'];
+        $entry->location = $info['location'];
+        $entry->save();
+
+        if($this->request->request->hasFile('file')){
+            Storage::disk($original->disk)->delete($original->path);
+            $this->request->request->file('file')->storeAs('uploads',$entry->name,$entry->disk);
+        } else {
+            if($entry->disk !== $original->disk){
+                $file = Storage::disk($original->disk)->get($original->path);
+                Storage::disk($entry->disk)->put($entry->path,$file);
+                Storage::disk($original->disk)->delete($original->path);
+            }
+            else if($entry->name !== $original->name){
+                Storage::disk($entry->disk)->move($original->path,$entry->path);
+            }
+        }
+
+        return $entry;
     }
 
     private function getFilePath($fileName){

@@ -18,12 +18,12 @@ abstract class BaseValidator{
         return true;
     }
 
-    protected function editValidation($object) : array{
+    protected function editValidation($entry,$object) : array{
         //get the editValidation of each fillable column of the table
         $validation = [];
         $fillable = $this->table->getFillable();
         foreach($fillable as $column){
-            $validation[$column->getColumnName()] = $column->editValidation($object);
+            $validation[$column->getColumnName()] = $column->editValidation($entry,$object);
         }
         return $validation;
     }
@@ -38,11 +38,11 @@ abstract class BaseValidator{
         return $validation;
     }
 
-    public function validateEdit($object){
+    public function validateEdit($entry,$object){
         //create the editValidator and validate a given object
-        $validation = $this->editValidation($object);
+        $validation = $this->editValidation($entry,$object);
 
-        return $this->validate($validation,$object->toArray());
+        return $this->validate($validation,$object);
     }
 
     public function validateCreate($object){

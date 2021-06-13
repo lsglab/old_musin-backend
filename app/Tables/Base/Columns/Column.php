@@ -87,13 +87,13 @@ abstract class Column{
         }
     }
 
-    protected function isUnique($unique,$exists,$object) : array{
-        if($unique && !$exists){
+    protected function isUnique($unique,$entry = null) : array{
+        if($unique && $entry === null){
             $string = "unique:".$this->table->table;
             return [$string];
         }
-        if($unique && $exists){
-            $rule = Rule::unique($this->table->table)->ignore($object->id);
+        if($unique && $entry !== null){
+            $rule = Rule::unique($this->table->table)->ignore($entry->id);
             return [$rule];
         }
 
@@ -110,10 +110,10 @@ abstract class Column{
         return [];
     }
 
-    public function editValidation($object) : array{
+    public function editValidation($entry,$object) : array{
         $required = $this->isRequired(false,$object);
         $type = $this->getTypeValidation($object);
-        $unique = $this->isUnique($this->unique,true,$object);
+        $unique = $this->isUnique($this->unique,$entry);
         $identifier = $this->isIdentifier($this->identifier);
 
         $validation = array();
@@ -123,7 +123,7 @@ abstract class Column{
     public function createValidation($object) : array{
         $required = $this->isRequired($this->required,$object);
         $type = $this->getTypeValidation($object);
-        $unique = $this->isUnique($this->unique,false,$object);
+        $unique = $this->isUnique($this->unique);
         $identifier = $this->isIdentifier($this->identifier);
 
         $validation = array();
