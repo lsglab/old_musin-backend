@@ -18,7 +18,6 @@ class BaseTable extends Table{
     private function defaultColumns(){
         array_unshift($this->columns,new Id($this));
         array_push($this->relations,new BelongsTo($this,'App\Tables\UserTable','creator_id','created_by',object: ['required' => false]));
-        array_push($this->relations,new PolymorphicHasMany($this,'App\Tables\EntryPermissionTable','entry'));
         array_push($this->columns,new Timestamp($this,'created_at'));
         array_push($this->columns,new Timestamp($this,'updated_at'));
     }

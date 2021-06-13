@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         //
         $actions = array('read','edit','create','delete','edit-self','delete-self','read-self');
-        $tables = ['roles','users','permissions','entry_permissions','files'];
+        $tables = ['roles','users','permissions','files','column_permissions'];
 
         $admin = Role::create([
             'name' => 'Admin',
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Public',
             'email' => 'public@lsg.de',
             'password' => '',
-            'role_id' => $public->id,
+            'role_id' => $admin->id,
         ]);
 
         foreach($tables as $table){

@@ -126,10 +126,11 @@ class BaseController extends Controller
         return $this->respond([$this->table => $data]);
     }
 
-    protected function removeNotFillable($data){
+    protected function removeNotEditable($data){
+        $role = auth()->user()->role;
         // remove any keys from the data that are not fillable
         foreach($data as $key => $value){
-            if(!in_array($key,$this->table->getColumnNames($this->table->getFillable($this->table->getTableColumns())))){
+            if(!in_array($key,$this->table->getColumnNames($this->table->getEditable($role)))){
                 unset($data[$key]);
             }
         }
@@ -157,7 +158,7 @@ class BaseController extends Controller
         if($editData === null){
             $editData = $this->getRequestInput();
         }
-        $editData = $this->removeNotFillable($editData);
+        $editData = $this->removeNotEditable($editData);
         //validate the request data
         $validate = $this->validateEdit($edit,$editData);
 

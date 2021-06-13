@@ -5,6 +5,8 @@ namespace App\Tables\Base;
 use Illuminate\Support\Collection;
 use App\Tables\Base\Columns\Column;
 use App\Helper;
+use App\Models\Role;
+use App\Models\ColumnPermission;
 
 abstract class Table
 {
@@ -123,6 +125,22 @@ abstract class Table
         return array_values(array_filter($array,function($value){
             return $value->fillable === true;
         }));
+    }
+
+    public function getEditable(Role $role,?array $array = null) : array{
+        $array = $this->arrayIsNull($array,$this->getFillable());
+
+        $permissions = ColumnPermission::where('role_id',$role->id)->where('action','edit')->where('table',$this->table)->get();
+
+        if($permissions->count() === 0) return $array;
+        else {
+
+            return array_values(array_filter($array, function($column) use ($permissions) {
+                return $permissions->filter(function($permission) use ($column) {
+                    return $permission->column === $column->name;
+                })->count() === 0;
+            }));
+        }
     }
 
         //returns all columns that are in the table;

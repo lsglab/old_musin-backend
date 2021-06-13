@@ -21,10 +21,6 @@ class User extends Authenticatable implements JWTSubject,ModelInterface{
         parent::__construct($attributes);
     }
 
-    public function entry_permissions(){
-        return $this->getRelation(__FUNCTION__);
-    }
-
     public function created_by(){
         return $this->getRelation(__FUNCTION__);
     }

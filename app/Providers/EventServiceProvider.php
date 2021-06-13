@@ -7,13 +7,12 @@ use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use App\Observers\Base\MainObserver;
-use App\Observers\EntryPermissionObserver;
 use App\Observers\UserObserver;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Permission;
-use App\Models\EntryPermission;
 use App\Models\File;
+use App\Models\ColumnPermission;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -39,7 +38,7 @@ class EventServiceProvider extends ServiceProvider
         Role::observe(MainObserver::class);
         Permission::observe(MainObserver::class);
         File::observe(MainObserver::class);
-        EntryPermission::observe(EntryPermissionObserver::class);
+        ColumnPermission::observe(MainObserver::class);
         //EntryPermission::observe(EntryPermissionObserver::class);
     }
 }

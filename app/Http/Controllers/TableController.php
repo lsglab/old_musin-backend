@@ -8,7 +8,7 @@ use App\Models\Permission;
 use App\Tables\UserTable;
 use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
-use App\Tables\EntryPermissionTable;
+use App\Tables\ColumnPermissionTable;
 use App\Tables\FileTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
@@ -26,9 +26,9 @@ class TableController extends Controller
         $this->tables = [
             new UserTable(),
             new RoleTable(),
-            new EntryPermissionTable(),
             new PermissionTable(),
-            new FileTable()
+            new FileTable(),
+            new ColumnPermissionTable(),
         ];
         $this->request = new Request();
     }
@@ -131,6 +131,7 @@ class TableController extends Controller
                 }
             }
 
+            $table->editable = $table->getColumnNames($table->getEditable($role));
             $table->permissions = $permissions;
             $table = $table->toArray();
         }

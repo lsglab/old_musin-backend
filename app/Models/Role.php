@@ -19,8 +19,4 @@ class Role extends MainModel{
     public function permissions(){
         return $this->getRelation(__FUNCTION__);
     }
-
-    public function entry_permissions_by_role(){
-        return $this->getRelation(__FUNCTION__);
-    }
 }
