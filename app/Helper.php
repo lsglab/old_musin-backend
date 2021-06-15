@@ -86,4 +86,13 @@ class Helper
 
         return $array;
     }
+
+    public static function removeNotInArray(array $data,array $array) : array{
+        foreach($data as $key => $value){
+            if(!in_array($key,$array)){
+                unset($data[$key]);
+            }
+        }
+        return $data;
+    }
 }

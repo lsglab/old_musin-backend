@@ -131,7 +131,7 @@ class TableController extends Controller
                 }
             }
 
-            $table->editable = $table->getColumnNames($table->getEditable($role));
+            $table->editable = $table->getColumnNames($table->getEditable($role,$table->getUserFillable($table->getFillable())));
             $table->permissions = $permissions;
             $table = $table->toArray();
         }

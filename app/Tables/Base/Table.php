@@ -127,8 +127,16 @@ abstract class Table
         }));
     }
 
+    public function getUserFillable(?array $array = null) : array{
+        $array = $this->arrayIsNull($array,$this->getTableColumns());
+
+        return array_values(array_filter($array,function($value){
+            return $value->userFillable === true;
+        }));
+    }
+
     public function getEditable(Role $role,?array $array = null) : array{
-        $array = $this->arrayIsNull($array,$this->getFillable());
+        $array = $this->arrayIsNull($array,$this->getUserFillable());
 
         $permissions = ColumnPermission::where('role_id',$role->id)->where('action','edit')->where('table',$this->table)->get();
 

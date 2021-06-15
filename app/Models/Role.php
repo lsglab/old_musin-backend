@@ -19,4 +19,8 @@ class Role extends MainModel{
     public function permissions(){
         return $this->getRelation(__FUNCTION__);
     }
+
+    public function column_permissions(){
+        return $this->getRelation(__FUNCTION__);
+    }
 }

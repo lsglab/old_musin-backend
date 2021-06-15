@@ -9,6 +9,7 @@ class RememberToken extends Column{
         parent::__construct($table,$name,$object);
         $this->type = 'rememberToken';
         $this->hidden = true;
+        $this->userFillable = false;
         $this->fillable = false;
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Base\MainController;
 use App\Tables\FileTable;
+use App\Models\File;
 use App\Http\Validators\FileValidator;
 use Illuminate\Support\Facades\Storage;
 use App\Helper;
@@ -48,6 +49,10 @@ class FileController extends MainController{
 
     protected function handleCreate(){
         if($this->request->request->hasFile('file')){
+            $file = $this->request->request->file('file');
+
+            $this->request->request['size'] = $file->getSize();
+
             $data = $this->create();
             return Helper::isResponse($data) ? $data : $this->afterCreate([$data]);
         }
@@ -60,7 +65,18 @@ class FileController extends MainController{
         Storage::disk($entry->disk)->delete($entry->path);
     }
 
-    protected function getFileInformation(bool $public,string $name) : array{
+    protected function getFileInformation(string $filePath) : array{
+        $type = mime_content_type($filePath);
+        error_log("type $type");
+        $size = filesize($filePath);
+
+        return [
+            'type' => $type,
+            'size' => $size
+        ];
+    }
+
+    protected function getFilePathInformation(bool $public,string $name) : array{
         $disk = 'public';
         if($public === false)  $disk = 'private';
 
@@ -77,25 +93,28 @@ class FileController extends MainController{
             'disk' => $disk,
             'url' => $url,
             'path' => $path,
-            'location' => $location
+            'location' => $location,
         ];
     }
 
-    protected function createOne($create = null){
-        $info = $this->getFileInformation($create['public'],$create['name']);
+    protected function createOne($create){
+        $file = $this->request->request->file('file');
+        $path = $this->getFilePathInformation($create['public'],$create['name']);
 
-        $create['file']->storeAs('uploads',$create['name'],$info['disk']);
+        $file->storeAs('uploads',$create['name'],$path['disk']);
+
+        $info = $this->getFileInformation($path['path']);
 
         return parent::createOne([
             'name' => $create['name'],
             'description' => $create['description'],
-            'size' => $create['size'],
-            'type' => $create['type'],
-            'path' => $info['path'],
-            'disk' => $info['disk'],
             'public' => $create['public'],
-            'location' => $info['location'],
-            'url' => $info['url']
+            'size' => $info['size'],
+            'type' => $info['type'],
+            'path' => $path['path'],
+            'disk' => $path['disk'],
+            'location' => $path['location'],
+            'url' => $path['url']
         ]);
     }
 
@@ -103,11 +122,15 @@ class FileController extends MainController{
         $original = $entry->replicate();
         $entry = parent::editOne($entry,$editData);
 
-        $info = $this->getFileInformation($entry->public,$entry->name);
-        $entry->disk = $info['disk'];
-        $entry->url = $info['url'];
-        $entry->path = $info['path'];
-        $entry->location = $info['location'];
+        $path = $this->getFilePathInformation($entry->public,$entry->name);
+        $info = $this->getFileInformation($original->path);
+
+        $entry->disk = $path['disk'];
+        $entry->url = $path['url'];
+        $entry->path = $path['path'];
+        $entry->location = $path['location'];
+        $entry->size = $info['size'];
+        $entry->type = $info['type'];
         $entry->save();
 
         if($this->request->request->hasFile('file')){

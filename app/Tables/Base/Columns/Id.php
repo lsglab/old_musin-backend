@@ -9,6 +9,7 @@ class Id extends Column{
         parent::__construct($table,$name,$object);
         $this->type = 'id';
         $this->fillable = false;
+        $this->userFillable = false;
     }
 
     protected function getTypeValidation($object) : array{

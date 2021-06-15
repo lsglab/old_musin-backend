@@ -9,6 +9,7 @@ class Timestamp extends Column{
         parent::__construct($table,$name,$object);
         $this->type = 'timestamp';
         $this->fillable = false;
+        $this->userFillable = false;
     }
 
     public function getCast() : string{

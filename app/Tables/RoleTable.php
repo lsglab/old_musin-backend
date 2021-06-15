@@ -22,6 +22,7 @@ class RoleTable extends BaseTable
         $this->relations = [
             new HasMany($this,'App\Tables\UserTable','role_id'),
             new HasMany($this,'App\Tables\PermissionTable','role_id'),
+            new HasMany($this,'App\Tables\ColumnPermissionTable','role_id'),
         ];
         parent::__construct();
     }

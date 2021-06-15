@@ -126,16 +126,15 @@ class BaseController extends Controller
         return $this->respond([$this->table => $data]);
     }
 
-    protected function removeNotEditable($data){
+    protected function removeNotEditable(array $data) : array{
         $role = auth()->user()->role;
-        // remove any keys from the data that are not fillable
-        foreach($data as $key => $value){
-            if(!in_array($key,$this->table->getColumnNames($this->table->getEditable($role)))){
-                unset($data[$key]);
-            }
-        }
+        $editable = $this->table->getColumnNames($this->table->getEditable($role));
+        return Helper::removeNotInArray($data,$editable);
+    }
 
-        return $data;
+    protected function removeNotUserFillable(array $data) : array{
+        $userFillable = $this->table->getColumnNames($this->table->getUserFillable($this->table->getFillable()));
+        return Helper::removeNotInArray($data,$userFillable);
     }
 
     public function read($query = null){
@@ -158,13 +157,14 @@ class BaseController extends Controller
         if($editData === null){
             $editData = $this->getRequestInput();
         }
-        $editData = $this->removeNotEditable($editData);
-        //validate the request data
+
         $validate = $this->validateEdit($edit,$editData);
 
         if($validate !== true){
             return $validate;
         }
+
+        $editData = $this->removeNotEditable($editData);
 
         $edit = $this->editOne($edit,$editData);
 
@@ -260,6 +260,8 @@ class BaseController extends Controller
         if($validate !== true){
             return $validate;
         }
+
+        $create= $this->removeNotUserFillable($create);
 
         $created = $this->createOne($create);
 

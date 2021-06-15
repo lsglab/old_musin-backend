@@ -22,8 +22,10 @@ abstract class Column{
     public bool $identifier = false;
     //if a column is hidden it is not returned in the api response
     public bool $hidden = false;
-    // if fillable is false it cannot be modified via requests
+    // if fillable is false it cannot be modified during mass assignement
     public bool $fillable = true;
+    // if userFillable is false it cannot it can be modified by mass assignement but not by requests
+    public bool $userFillable = true;
     // should this column be used as the default display value for this table
     public bool $isDisplayValue = false;
     // a default value for the column, can be of any type
@@ -31,7 +33,7 @@ abstract class Column{
     // properties that should not returned in api response;
     protected array $exclude = ['table'];
 
-    public function __construct($table,$name,$object=null){
+    public function __construct($table,$name,$object=null,$customValidation = null){
         $this->table = $table;
         $this->name = $name;
 
@@ -40,6 +42,7 @@ abstract class Column{
         $this->assignIfNotNull($object,'required');
         $this->assignIfNotNull($object,'identifier');
         $this->assignIfNotNull($object,'hidden');
+        $this->assignIfNotNull($object,'userFillable');
         $this->assignIfNotNull($object,'fillable');
         $this->assignIfNotNull($object,'default');
     }
