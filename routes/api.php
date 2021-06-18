@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ColumnPermissionController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\SiteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,7 @@ Route::group(['middleware' => ['permission']],function(){
     Route::match($verbs,'/roles',[RoleController::class,'handle']);
     Route::match($verbs,'/permissions',[PermissionController::class,'handle']);
     Route::match($verbs,'/column_permissions',[ColumnPermissionController::class,'handle']);
+    Route::match($verbs,'/sites',[SiteController::class,'handle']);
 });
 
 Route::get('tables',[TableController::class,'handleRead']);

@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
-use App\Http\Controllers\Base\MainController;
 use App\Models\Permission;
 use App\Tables\UserTable;
 use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
 use App\Tables\ColumnPermissionTable;
 use App\Tables\FileTable;
-use Illuminate\Database\Eloquent\Builder;
-use App\Console\Commands\Utils\ClassFinder;
+use App\Tables\SiteTable;
 use App\Http\Request\Request;
 use App\Http\Controllers\Base\Controller;
 use App\Helper;
@@ -29,6 +26,7 @@ class TableController extends Controller
             new PermissionTable(),
             new FileTable(),
             new ColumnPermissionTable(),
+            new SiteTable(),
         ];
         $this->request = new Request();
     }
@@ -113,7 +111,7 @@ class TableController extends Controller
                         $controller->builder->request->action = $baseAction;
 
                         $self = $action === 'edit-self' || $action === 'read-self' || $action === 'delete-self';
-                        $ids;
+                        $ids = array();
 
                         if($self){
                             $ids = $controller->readSelf(false);

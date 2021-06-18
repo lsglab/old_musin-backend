@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\Permission;
 use App\Models\File;
 use App\Models\ColumnPermission;
+use App\Models\Site;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -38,6 +39,7 @@ class EventServiceProvider extends ServiceProvider
         Role::observe(MainObserver::class);
         Permission::observe(MainObserver::class);
         File::observe(MainObserver::class);
+        Site::observe(MainObserver::class);
         ColumnPermission::observe(MainObserver::class);
         //EntryPermission::observe(EntryPermissionObserver::class);
     }

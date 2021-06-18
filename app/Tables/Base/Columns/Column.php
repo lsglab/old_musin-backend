@@ -142,10 +142,10 @@ abstract class Column{
         return $table;
     }
 
-    public function createDBColumn($table){
+    public function createDBColumn(Blueprint $table){
         $table = $this->createDBColumnType($table);
         if($this->unique){
-            $table = $table->unique();
+            $table = $table->unique($this->name);
         }
         if(!$this->required){
             $table = $table->nullable();
