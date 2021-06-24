@@ -8,5 +8,6 @@ class FileValidator extends BaseValidator{
 
     public function __construct(){
         $this->table = new FileTable();
+        parent::__construct();
     }
 }

@@ -8,5 +8,6 @@ class ColumnPermissionValidator extends BaseValidator{
 
     public function __construct(){
         $this->table = new ColumnPermissionTable();
+        parent::__construct();
     }
 }

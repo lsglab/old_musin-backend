@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AuthCookie;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\SiteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,11 @@ Route::group(['middleware' => [AuthCookie::class,'permission:files']],function()
     });
     Route::get('/download/{fileName}',function($fileName) use ($controller){
         return $controller->downloadFile($fileName);
+    });
+
+    Route::get('/cms/pages/{filePath}',function($filePath){
+        $controller = new SiteController();
+        return $controller->getFile("cms/pages/$filePath");
     });
 });
 

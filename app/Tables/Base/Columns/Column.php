@@ -33,7 +33,7 @@ abstract class Column{
     // properties that should not returned in api response;
     protected array $exclude = ['table'];
 
-    public function __construct($table,$name,$object=null,$customValidation = null){
+    public function __construct($table,$name,$object=null,$customValidation = []){
         $this->table = $table;
         $this->name = $name;
 
@@ -103,11 +103,11 @@ abstract class Column{
         return [];
     }
 
-    protected function isIdentifier($identifier) : array{
+    protected function isIdentifier($identifier,$entry = null) : array{
         if($identifier){
             $identifiers = $this->table->getColumnNames($this->table->getIdentifiers());
 
-            $composite = new CompositeUnique($this->table->table,$identifiers);
+            $composite = new CompositeUnique($this->table->table,$identifiers,$entry);
             return [$composite];
         }
         return [];
@@ -117,7 +117,7 @@ abstract class Column{
         $required = $this->isRequired(false,$object);
         $type = $this->getTypeValidation($object);
         $unique = $this->isUnique($this->unique,$entry);
-        $identifier = $this->isIdentifier($this->identifier);
+        $identifier = $this->isIdentifier($this->identifier,$entry);
 
         $validation = array();
         return array_merge($validation,$required,$type,$unique,$identifier);

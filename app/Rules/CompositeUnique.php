@@ -15,10 +15,11 @@ class CompositeUnique implements Rule
     private string $table;
     private array $columns;
 
-    public function __construct($table,$columns)
+    public function __construct($table,$columns,$entry = null)
     {
         $this->table = $table;
         $this->columns = $columns;
+        $this->entry = $entry;
     }
 
     /**
@@ -37,7 +38,13 @@ class CompositeUnique implements Rule
         }
 
         // query the table with all the conditions
-        $result = DB::table( $this->table )->select( DB::raw( 1 ) )->where( $fields )->first();
+        $query = DB::table( $this->table )->select( DB::raw( 1 ) )->where( $fields );
+
+        if($this->entry !== null){
+            $query = $query->where('id','!=',$this->entry->id);
+        }
+
+        $result = $query->first();
 
         return empty( $result ); // edited here
     }

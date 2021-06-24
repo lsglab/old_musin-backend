@@ -8,5 +8,6 @@ class SiteValidator extends BaseValidator{
 
     public function __construct(){
         $this->table = new SiteTable();
+        parent::__construct();
     }
 }

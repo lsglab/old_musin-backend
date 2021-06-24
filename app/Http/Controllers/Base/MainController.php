@@ -98,6 +98,8 @@ class MainController extends BaseController
         this decreases the time needed significantly when larger samples are returned
         (e.g 50 entries without _norelations take about 4.7 seconds, with _norelations 700ms)
         */
+        error_log("here returning stuff");
+
         if($this->request->getInput('_norelations') === false){
             foreach($array as $data){
                 //resolve all of the tables relations

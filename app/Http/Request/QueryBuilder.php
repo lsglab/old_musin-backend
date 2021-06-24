@@ -15,7 +15,7 @@ class QueryBuilder{
     public function __construct(Request $request,$table){
         $this->request = $request;
         $this->table = $table;
-        $this->searchColumns = $this->table->getColumnNames($this->table->getVisible($this->table->getTableColumns()));
+        $this->searchColumns = $this->table->getVisible($this->table->getTableColumns());
     }
 
     protected function setQuery($query){
@@ -52,7 +52,7 @@ class QueryBuilder{
             } else if($key === '_orderBy'){
                 $this->builder = $this->orderBy($value);
             }
-            else if(in_array($key,$this->searchColumns)){
+            else if(in_array($key,$this->table->getColumnNames($this->searchColumns))){
                 $this->builder = $this->defaultSearch($key,$value);
             }
         }
@@ -65,7 +65,10 @@ class QueryBuilder{
         if($value === "null"){
             return $this->builder->whereNull($key);
         }
-        //otherwise standard where
+        //cast values to their right datatypes, e.g a "true" gets cast to true if
+        //the column type is boolean
+        $value = $this->table->getColumn($key,$this->searchColumns)->castValue($value);
+
         return $this->builder->where($key,$value);
     }
 

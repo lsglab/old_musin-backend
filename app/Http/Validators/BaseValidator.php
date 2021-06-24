@@ -2,10 +2,16 @@
 
 namespace App\Http\Validators;
 use Illuminate\Support\Facades\Validator;
+use App\Helper;
 
 abstract class BaseValidator{
 
     public $table;
+    protected array $userFillable = [];
+
+    public function __construct(){
+        $this->userFillable = $this->table->getUserFillable($this->table->getFillable());
+    }
 
     protected function validate($validation,$object){
         //validate the object
@@ -21,8 +27,8 @@ abstract class BaseValidator{
     protected function editValidation($entry,$object) : array{
         //get the editValidation of each fillable column of the table
         $validation = [];
-        $fillable = $this->table->getFillable();
-        foreach($fillable as $column){
+
+        foreach($this->userFillable as $column){
             $validation[$column->getColumnName()] = $column->editValidation($entry,$object);
         }
         return $validation;
@@ -31,16 +37,26 @@ abstract class BaseValidator{
     protected function createValidation($object) : array{
         //get the createValidation of each fillable column of the table
         $validation = [];
-        $fillable = $this->table->getFillable();
-        foreach($fillable as $column){
+        foreach($this->userFillable as $column){
             $validation[$column->getColumnName()] = $column->createValidation($object);
         }
         return $validation;
     }
 
+    /*
+    public function removeNotFillable($entry){
+        $copy = $entry;
+
+        $columns = $this->table->getColumnNames($this->userFillable);
+
+        return Helper::removeNotInArray($copy,$this->table->getColumnNames($this->userFillable));
+    }
+    */
+
     public function validateEdit($entry,$object){
-        //create the editValidator and validate a given object
         $validation = $this->editValidation($entry,$object);
+
+       //  $validationObject = $this->removeNotFillable($object);
 
         return $this->validate($validation,$object);
     }
@@ -48,6 +64,8 @@ abstract class BaseValidator{
     public function validateCreate($object){
         //create the create validator and validate a given object
         $validation = $this->createValidation($object);
+
+        // $validationObject = $this->removeNotFillable($object);
 
         return $this->validate($validation,$object);
     }
