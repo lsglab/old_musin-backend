@@ -28,11 +28,13 @@ Route::group(['middleware' => [AuthCookie::class,'permission:files']],function()
     Route::get('/download/{fileName}',function($fileName) use ($controller){
         return $controller->downloadFile($fileName);
     });
+});
 
+Route::group(['middleware' => [AuthCookie::class,'permission:sites']],function(){
     Route::get('/cms/pages/{filePath}',function($filePath){
         $controller = new SiteController();
-        return $controller->getFile("cms/pages/$filePath");
-    });
+        return $controller->getFileByUrl("cms/pages/{$filePath}");
+    })->where('filePath','(.*)');
 });
 
 

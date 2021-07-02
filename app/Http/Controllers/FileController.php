@@ -66,6 +66,8 @@ class FileController extends MainController{
     }
 
     protected function getFileInformation(string $filePath) : array{
+        $basePath = storage_path();
+        $filePath = "{$basePath}/{$filePath}";
         $type = mime_content_type($filePath);
         error_log("type $type");
         $size = filesize($filePath);
@@ -103,7 +105,7 @@ class FileController extends MainController{
 
         $file->storeAs('uploads',$create['name'],$path['disk']);
 
-        $info = $this->getFileInformation($path['path']);
+        $info = $this->getFileInformation($path['location']);
 
         return parent::createOne([
             'name' => $create['name'],

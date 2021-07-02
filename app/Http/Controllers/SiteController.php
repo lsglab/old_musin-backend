@@ -22,6 +22,7 @@ class SiteController extends MainController{
         }
 
         $data = $this->create();
+
         return Helper::isResponse($data) ? $data : $this->afterCreate(array($data));
     }
 
@@ -100,8 +101,8 @@ class SiteController extends MainController{
         Storage::disk($entry->disk)->delete($entry->diskPath);
     }
 
-    private function getFilePath($fileUrl){
-        $data = $this->read(['url' => $fileUrl]);
+    private function getFilePath($query){
+        $data = $this->read($query);
 
         if($data->count() > 0){
             $file = $data->first();
@@ -112,8 +113,15 @@ class SiteController extends MainController{
         return false;
     }
 
-    public function getFile($fileUrl){
-        $file = $this->getFilePath($fileUrl);
+    public function getFileByUrl($fileUrl){
+        $file = $this->getFilePath(['url' => $fileUrl]);
+
+        if($file !== false) return response()->file($file);
+        abort(404);
+    }
+
+    public function getFileByID($id){
+        $file = $this->getFilePath(['id' => $id]);
 
         if($file !== false) return response()->file($file);
         abort(404);
