@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $tmpDir = storage_path('app/tmp');
-        putenv("TMPDIR=$tmpDir");
+        ini_set('upload_tmp_dir',$tmpDir);
     }
 
     /**
