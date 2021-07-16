@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AuthCookie;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\SiteController;
-use App\Http\Middleware\PageMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +34,24 @@ Route::group(['middleware' => [AuthCookie::class,'permission:sites']],function()
     })->where('filePath','(.*)');
 });
 
-/*Route::get('/{path}',function($path){
-    return response()->file(public_path(request()->path));
-})->where('path','(.*)')->middleware(PageMiddleware::class);*/
+$baseFilePath = 'app/public/pages/';
+
+Route::get('/{path}',function($path = '/') use ($baseFilePath){
+    if($path === '/') $path = '';
+    else $path = "{$path}";
+
+    $explode = explode('/',$path);
+    if($explode[count($explode) - 1] !== 'index.html'){
+        $path = $path."index.html";
+    }
+
+    $path = storage_path("${baseFilePath}${path}");
+
+    if(!file_exists($path)){
+        abort(404);
+    }
+
+    return response()->file($path);
+})->where('path','(.*)');
+
 

@@ -2,6 +2,7 @@
 
 namespace App\Tables\Base\Columns;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
 class Timestamp extends Column{
 
@@ -21,6 +22,6 @@ class Timestamp extends Column{
     }
 
     protected function createDBColumnType(Blueprint $table) {
-        return $table->timestamp($this->name);
+        return $table->timestamp($this->name)->default(DB::raw('CURRENT_TIMESTAMP'));
     }
 }

@@ -10,6 +10,7 @@ use App\Tables\PermissionTable;
 use App\Tables\RoleTable;
 use App\Tables\FileTable;
 use App\Tables\SiteTable;
+use App\Tables\AppointmentTable;
 use App\Tables\EntryPermissionTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
@@ -25,6 +26,9 @@ class GroupController extends TableController{
         $this->groups = [
             new Group('Frontend',[
                 [new SiteTable(),'/frontend']
+            ]),
+            new Group('Schule',[
+                [new AppointmentTable(),'/database/appointments']
             ]),
             new Group('Authentifizierung',[
                 [new UserTable(),'/database/users',],

@@ -15,8 +15,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $tmpDir = storage_path('app/tmp');
-        ini_set('upload_tmp_dir',$tmpDir);
+        /*$tmpDir = storage_path('app/tmp');
+        ini_set('upload_tmp_dir',$tmpDir);*/
     }
 
     /**

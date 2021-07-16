@@ -14,6 +14,7 @@ use App\Models\Permission;
 use App\Models\File;
 use App\Models\ColumnPermission;
 use App\Models\Site;
+use App\Models\Appointment;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Appointment::observe(MainObserver::class);
         User::observe(UserObserver::class);
         Role::observe(MainObserver::class);
         Permission::observe(MainObserver::class);
