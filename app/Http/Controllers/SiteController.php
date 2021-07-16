@@ -26,20 +26,21 @@ class SiteController extends MainController{
         return Helper::isResponse($data) ? $data : $this->afterCreate(array($data));
     }
 
-    protected function getFilePathInformation($public,$path,$filename) : array{
+    protected function getFilePathInformation($public,$path) : array{
         $disk = 'public';
         if($public === false)  $disk = 'private';
 
-        $url = "$path{$filename}";
-        $diskPath = "pages${url}";
+        $url = "$path";
+        $diskPath = "pages${url}/index.html";
 
         $location = "app/{$disk}/{$diskPath}";
 
         if(!$public){
-            $url = "cms/pages{$url}";
+            $url = "/pages{$url}";
         }
 
         return [
+            'path' => $path,
             'disk' => $disk,
             'url' => $url,
             'location' => $location,
@@ -53,7 +54,7 @@ class SiteController extends MainController{
             return $this->respond(['message' => 'no html given'],400);
         }
 
-        $info = $this->getFilePathInformation($create['public'],$create['path'],$create['filename']);
+        $info = $this->getFilePathInformation($create['public'],$create['path']);
         $create['url'] = $info['url'];
         $create['disk'] = $info['disk'];
         $create['location'] = $info['location'];
@@ -70,7 +71,7 @@ class SiteController extends MainController{
         $original = $entry->replicate();
 
         $entry = parent::editOne($entry,$editData);
-        $info = $this->getFilePathInformation($entry->public,$entry->path,$entry->filename);
+        $info = $this->getFilePathInformation($entry->public,$entry->path);
 
         $entry->url = $info['url'];
         $entry->disk = $info['disk'];
@@ -125,5 +126,22 @@ class SiteController extends MainController{
 
         if($file !== false) return response()->file($file);
         abort(404);
+    }
+
+    public static function getFile($storagePath,$filepath){
+        if($filepath === '/') $filepath = '';
+
+        $explode = explode('/',$filepath);
+        if($explode[count($explode) - 1] !== 'index.html'){
+            $filepath = $filepath."/index.html";
+        }
+
+        $filepath = storage_path("${storagePath}${filepath}");
+
+        if(!file_exists($filepath)){
+            abort(404);
+        }
+
+        return response()->file($filepath);
     }
 }

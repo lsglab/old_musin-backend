@@ -28,30 +28,15 @@ Route::group(['middleware' => [AuthCookie::class,'permission:files']],function()
 });
 
 Route::group(['middleware' => [AuthCookie::class,'permission:sites']],function(){
-    Route::get('/cms/pages/{filePath}',function($filePath){
+    Route::get("/pages/{filePath}",function($filePath){
         $controller = new SiteController();
-        return $controller->getFileByUrl("cms/pages/{$filePath}");
-    })->where('filePath','(.*)');
+        return $controller->getFileByUrl("/pages/{$filePath}");
+    });
 });
 
-$baseFilePath = 'app/public/pages/';
 
-Route::get('/{path}',function($path = '/') use ($baseFilePath){
-    if($path === '/') $path = '';
-    else $path = "{$path}";
-
-    $explode = explode('/',$path);
-    if($explode[count($explode) - 1] !== 'index.html'){
-        $path = $path."index.html";
-    }
-
-    $path = storage_path("${baseFilePath}${path}");
-
-    if(!file_exists($path)){
-        abort(404);
-    }
-
-    return response()->file($path);
-})->where('path','(.*)');
+Route::get('/{path}',function($path){
+    return SiteController::getFile('app/public/pages',$path);
+})->where('path','^(?!\/cms\/pages)');
 
 

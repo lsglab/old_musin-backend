@@ -14,12 +14,9 @@ class SiteValidator extends BaseValidator{
     private function customValidation(array $validation) : array{
         //explanation: https://regex101.com/
         //This regex checks for a string to be a valid filepath
-        $pathValidation = ['regex:/^\/(?(?=[a-zA-Z\/_])(?!.*(\/)\1+)[a-zA-Z\/_]+\/$|$)/'];
-        //This regex checks for a valid filename
-        $filenameValidation = ["regex:/^[a-zA-Z1-9_]+.html$/"];
+        $pathValidation = ['regex:/^\/(?(?=[a-zA-Z\/_])(?!.*(\/)\1+)[a-zA-Z\/_]+$)/'];
 
         $validation['path'] = array_merge($validation['path'],$pathValidation);
-        $validation['filename'] = array_merge($validation['filename'],$filenameValidation);
 
         return $validation;
     }

@@ -74,11 +74,6 @@ class getPermission
         return $parts[1];
     }
 
-    //retrieve the subject by path
-    //since the path must be unqiue only one result can be returned
-    function getSubject($path){
-        return Subject::where('table',$path)->first();
-    }
 
     //retrive a role by its name
     function getRole($name){
