@@ -12,6 +12,7 @@ use App\Tables\FileTable;
 use App\Tables\SiteTable;
 use App\Tables\AppointmentTable;
 use App\Tables\EntryPermissionTable;
+use App\Tables\ComponentTable;
 use Illuminate\Database\Eloquent\Builder;
 use App\Console\Commands\Utils\ClassFinder;
 use App\Http\Request\Request;
@@ -25,7 +26,8 @@ class GroupController extends TableController{
     public function __construct(){
         $this->groups = [
             new Group('Frontend',[
-                [new SiteTable(),'/frontend']
+                [new SiteTable(),'/frontend'],
+                [new ComponentTable(),'/components']
             ]),
             new Group('Schule',[
                 [new AppointmentTable(),'/database/appointments']

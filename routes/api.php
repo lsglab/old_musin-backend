@@ -12,6 +12,7 @@ use App\Http\Controllers\ColumnPermissionController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ComponentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +39,7 @@ Route::group(['middleware' => ['permission']],function(){
     Route::match($verbs,'/column_permissions',[ColumnPermissionController::class,'handle']);
     Route::match($verbs,'/sites',[SiteController::class,'handle']);
     Route::match($verbs,'/appointments',[AppointmentController::class,'handle']);
+    Route::match($verbs,'/components',[ComponentController::class,'handle']);
 });
 
 Route::get('tables',[TableController::class,'handleRead']);

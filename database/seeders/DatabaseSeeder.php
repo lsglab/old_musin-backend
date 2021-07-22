@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         //
         $actions = array('read','edit','create','delete','edit-self','delete-self','read-self');
-        $tables = ['roles','users','permissions','files','column_permissions','sites','appointments'];
+        $tables = ['roles','users','permissions','files','column_permissions','sites','appointments','components'];
 
         $admin = Role::create([
             'name' => 'Admin',
@@ -48,14 +48,12 @@ class DatabaseSeeder extends Seeder
 
         foreach($tables as $table){
             foreach($actions as &$action){
-                //if($subject->model != 'User' || $action != 'read'){
-                    Permission::create([
-                        'action'=>$action,
-                        'role_id'=>$admin->id,
-                        'table'=>$table,
-                        'creator_id' => $user->id
-                    ]);
-                //}
+                Permission::create([
+                    'action'=>$action,
+                    'role_id'=>$admin->id,
+                    'table'=>$table,
+                    'creator_id' => $user->id
+                ]);
             }
         }
     }

@@ -10,6 +10,7 @@ use App\Tables\ColumnPermissionTable;
 use App\Tables\FileTable;
 use App\Tables\SiteTable;
 use App\Tables\AppointmentTable;
+use App\Tables\ComponentTable;
 use App\Http\Request\Request;
 use App\Http\Controllers\Base\Controller;
 use App\Helper;
@@ -29,6 +30,7 @@ class TableController extends Controller
             new ColumnPermissionTable(),
             new SiteTable(),
             new AppointmentTable(),
+            new ComponentTable(),
         ];
         $this->request = new Request();
     }

@@ -14,7 +14,7 @@ class BasePermissionTable extends BaseTable
     public function __construct(){
         $this->columns[] =
             new Enumeration($this,'table',
-                ['roles','permissions','users','files','column_permissions','sites','appointments'],
+                ['roles','permissions','users','files','column_permissions','sites','appointments','components'],
             ['identifier' => true]);
         $this->relations[] = new BelongsTo($this,'App\Tables\RoleTable','role_id',object: ['identifier' => true]);
         parent::__construct();
