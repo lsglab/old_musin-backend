@@ -35,8 +35,9 @@ Route::group(['middleware' => [AuthCookie::class,'permission:sites']],function()
 });
 
 
-Route::get('/{path}',function($path){
+Route::get('/{path?}',function($path = '/'){
+    error_log("FETCHING SITE: $path");
     return SiteController::getFile('app/public/pages',$path);
-})->where('path','^(?!\/cms\/pages)');
+})->where('path','^(.*)$');
 
 

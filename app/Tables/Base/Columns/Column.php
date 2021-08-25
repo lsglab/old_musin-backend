@@ -24,7 +24,7 @@ abstract class Column{
     public bool $hidden = false;
     // if fillable is false it cannot be modified during mass assignement
     public bool $fillable = true;
-    // if userFillable is false it cannot it can be modified by mass assignement but not by requests
+    // if userFillable is false it can be modified by mass assignement but not by requests
     public bool $userFillable = true;
     // should this column be used as the default display value for this table
     public bool $isDisplayValue = false;

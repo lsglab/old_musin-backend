@@ -19,7 +19,7 @@ class FileTable extends BaseTable
             new DBString($this,'description',['required' => false,'default' => '']),
             new Boolean($this,'public'),
             new Integer($this,'size',['userFillable' => false]),
-            new Enumeration($this,'type',['image/jpeg','image/png'],['userFillable' => false]),
+            new Enumeration($this,'type',['image/jpeg','image/png','image/svg+xml','application/pdf'],['userFillable' => false]),
             new DBString($this,'url',['required' => false,'userFillable' => false,'required' => false]),
             new DBString($this,'disk',['hidden' => true,'userFillable' => false,'required' => false]),
             new DBString($this,'path',['hidden' => true,'userFillable' => false,'required' => false]),

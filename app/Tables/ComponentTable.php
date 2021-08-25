@@ -13,6 +13,7 @@ class ComponentTable extends BaseTable{
 
     public function __construct(){
         $this->columns = [
+            new Boolean($this,'slot'),
             new DBString($this,'description'),
             new DBString($this,'name',['unique' => true,'isDisplayColumn' => true]),
             new JSON($this,'blueprint'),

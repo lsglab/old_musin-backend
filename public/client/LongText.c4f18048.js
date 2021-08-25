@@ -1,3 +1,0 @@
-import{I as e}from"./ShortText.0394cb61.js";class LongText extends e{constructor(e="Long Text"){super(e),this.type="longText"}async prepareInput(e){const t=await Promise.all([import("./ckeditor.0c5e0e9d.js"),__inject_styles(["client-3d4420cc.css"])]).then((function(e){return e[0]})).then((function(e){return e.c}));await Promise.all([import("./ckeditor.2d30aedc.js"),__inject_styles(["ckeditor-9d3d8c9e.css"])]).then((function(e){return e[0]}));const c=t.default,r=e.getElementById(this.id);c.create(r).then(e=>{this.editor=e,this.editor.setData(this.data)}).catch(()=>{})}save(e){return this.data=this.editor.getData(),super.save(e)}deleteInput(){this.editor.destroy()}}export{LongText as L};
-
-import __inject_styles from './inject_styles.fe622066.js';

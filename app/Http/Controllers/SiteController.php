@@ -129,7 +129,11 @@ class SiteController extends MainController{
     }
 
     public static function getFile($storagePath,$filepath){
-        if($filepath === '/') $filepath = '';
+        if($filepath === '/'){
+            $filepath = '';
+        } else {
+            $filepath = '/'.$filepath;
+        }
 
         $explode = explode('/',$filepath);
         if($explode[count($explode) - 1] !== 'index.html'){
@@ -137,6 +141,8 @@ class SiteController extends MainController{
         }
 
         $filepath = storage_path("${storagePath}${filepath}");
+
+        error_log("filepath $filepath");
 
         if(!file_exists($filepath)){
             abort(404);

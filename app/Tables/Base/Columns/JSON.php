@@ -17,6 +17,11 @@ class JSON extends Column{
     }
 
     public function getCast() : string{
-        return 'json';
+        return 'array';
+    }
+
+    public function modifyValue($value) : string{
+        // decode the json string that was expected for validation purposes
+        return json_decode($value);
     }
 }
