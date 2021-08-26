@@ -78,27 +78,23 @@ class AuthController extends Controller
     }
 
     public function getAuthenticatedUser(){
+        $user = auth()->user();
+
         try {
-
-                if (! $user = JWTAuth::parseToken()->authenticate()) {
-                        return response()->json(['user_not_found'], 404);
-                }
-
-        } catch (Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-
+            if (! $user = JWTAuth::parseToken()->authenticate()) {
+                return response()->json(['user_not_found'], 404);
+            }
+        } catch (Exception $e) {
+            if ($e instanceof Tymon\JWTAuth\Exceptions\TokenExpiredException) {
                 return response()->json(['token_expired'], $e->getStatusCode());
-
-        } catch (Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-
+            } else if ($e instanceof Tymon\JWTAuth\Exceptions\TokenInvalidException) {
                 return response()->json(['token_invalid'], $e->getStatusCode());
-
-        } catch (Tymon\JWTAuth\Exceptions\JWTException $e) {
-
+            } else if ($e instanceof Tymon\JWTAuth\Exceptions\JWTException) {
                 return response()->json(['token_absent'], $e->getStatusCode());
-
+            }
         }
 
-        return response()->json(compact('user'));
+        return response()->json(['user' => $user]);
     }
 
     function logout(){
