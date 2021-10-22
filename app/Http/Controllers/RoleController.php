@@ -15,14 +15,12 @@ class RoleController extends MainController{
         parent::__construct();
     }
 
-    /*function read_self($query = null){
-        $user = auth()->user();
+    protected function deleteOne($role) {
+        //The Admin and the Public role cannot be deleted
+        if($role->name === 'Admin' || $role->name === 'Public') {
+            return;
+        }
 
-        $builder = Role::where('id',$user->role->id);
-
-        $builder = $this->queryBuilder($builder,$query);
-
-        $data = $builder->get();
-        return $data;
-    }*/
+        return parent::deleteOne($component);
+    }
 }

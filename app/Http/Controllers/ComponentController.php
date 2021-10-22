@@ -13,4 +13,13 @@ class ComponentController extends MainController{
         $this->validator = new ComponentValidator();
         parent::__construct();
     }
+
+    protected function deleteOne($component) {
+        // The Nav and Footer components cannot be deleted
+        if($component->name === 'Footer' || $component->name === 'Navbar') {
+            return;
+        }
+
+        return parent::deleteOne($component);
+    }
 }

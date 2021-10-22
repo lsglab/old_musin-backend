@@ -3,151 +3,86 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Base\MainController;
-use Illuminate\Support\Facades\Storage;
 use App\Tables\SiteTable;
-use App\Helper;
+use App\Models\Site;
 use App\Http\Validators\SiteValidator;
 
 class SiteController extends MainController{
     public function __construct(){
+        $this->frontendRouteFolder = env('FRONTEND_ROUTES',null);
         $this->table = new SiteTable();
         $this->validator = new SiteValidator();
         parent::__construct();
     }
 
-    protected function handleCreate(){
-        $body = $this->request->getRequestBody();
-        if(array_key_exists('0',$body)){
-            return $this->respond(['message' => 'Invalid data. Expected object'],400);
-        }
-
-        $data = $this->create();
-
-        return Helper::isResponse($data) ? $data : $this->afterCreate(array($data));
+    protected function getFilename(Site $site){
+        return $this->frontendRouteFolder.$site->path.'.svelte';
     }
 
-    protected function getFilePathInformation($public,$path) : array{
-        $disk = 'public';
-        if($public === false)  $disk = 'private';
+    protected function editOne($site, $editData){
+        $site = parent::editOne($site, $editData);
 
-        $url = "$path";
-        $diskPath = "pages${url}/index.html";
-
-        $location = "app/{$disk}/{$diskPath}";
-
-        if(!$public){
-            $url = "/pages{$url}";
+        $filename = $this->getFilename($site);
+        //create a svelte file if the file is public but no
+        //file is yet created
+        if($site->public && !file_exists($filename)){
+            $this->createSvelteFile($site);
+        }
+        //delete the svelte file if the file is not public but a file exists
+        if(!$site->public && file_exists($filename)){
+            unlink($filename);
         }
 
-        return [
-            'path' => $path,
-            'disk' => $disk,
-            'url' => $url,
-            'location' => $location,
-            'diskPath' => $diskPath
-        ];
+        return $site;
     }
 
-    protected function createOne($create){
-        $html = $this->request->getInput('html');
-        if(!$html){
-            return $this->respond(['message' => 'no html given'],400);
+    protected function createSvelteFile(Site $site){
+        $dirLevel = substr_count($site->path,'/') - 1;
+        $correctUrl = '';
+
+        for($i = 0; $i < $dirLevel; $i++) {
+            $correctUrl = $correctUrl.'../';
         }
 
-        $info = $this->getFilePathInformation($create['public'],$create['path']);
-        $create['url'] = $info['url'];
-        $create['disk'] = $info['disk'];
-        $create['location'] = $info['location'];
-        $create['diskPath'] = $info['diskPath'];
-        $entry = parent::createOne($create);
+        $file = "<script context=\"module\">
+            import Export from '../${correctUrl}components/cms/export.svelte';
+            import request from '../${correctUrl}cms/Utils/requests';
 
-        Storage::disk($entry->disk)->put($entry->diskPath,$html);
+            async function fetchCustomComponents(apiUrl) {
+                const res = await request(`\${apiUrl}/components?_norelations=true`, 'get', {}, false);
 
-        return $entry;
-    }
+                if (res.status === 200) {
+                    return res.data.components;
+                }
+                return [];
+            }
 
-    protected function editOne($entry,$editData){
-        $html = $this->request->getInput('html');
-        $original = $entry->replicate();
+            async function fetchData(apiUrl, path) {
+                const res = await request(`\${apiUrl}/sites?path=\${path}`, 'get', {}, false);
 
-        $entry = parent::editOne($entry,$editData);
-        $info = $this->getFilePathInformation($entry->public,$entry->path);
+                return JSON.parse(res.data.sites[0].blueprint);
+            }
 
-        $entry->url = $info['url'];
-        $entry->disk = $info['disk'];
-        $entry->location = $info['location'];
-        $entry->diskPath = $info['diskPath'];
-        $entry->save();
+            export async function preload(page, session) {
+                const apiUrl = session.globals.apiUrl;
+                const path = page.path;
 
-        if($html !== false){
-            Storage::disk($original->disk)->delete($original->diskPath);
-            Storage::disk($entry->disk)->put($entry->diskPath,$html);
-            return $entry;
-        }
+                const customComponents = await fetchCustomComponents(apiUrl);
+                const data = await fetchData(apiUrl, path);
 
-        if($entry->disk !== $original->disk){
-            $file = Storage::disk($original->disk)->get($original->diskPath);
-            Storage::disk($entry->disk)->put($entry->diskPath,$file);
-            Storage::disk($original->disk)->delete($original->diskPath);
-        }
-        else if($entry->name !== $original->name){
-            Storage::disk($entry->disk)->move($original->diskPath,$entry->diskPath);
-        }
+                return { customComponents, data };
+            }
+            </script>
 
-        return $entry;
-    }
+            <script>
+                export let customComponents;
+                export let data;
+            </script>
 
-    protected function deleteOne($entry){
-        parent::deleteOne($entry);
-        Storage::disk($entry->disk)->delete($entry->diskPath);
-    }
+            <Export data=\"{data}\" customComponents=\"{customComponents}\" />";
 
-    private function getFilePath($query){
-        $data = $this->read($query);
+        $filepath = $this->getFilename($site);
 
-        if($data->count() > 0){
-            $file = $data->first();
-            $filepath = storage_path($file->location);
-            return $filepath;
-        }
-
-        return false;
-    }
-
-    public function getFileByUrl($fileUrl){
-        $file = $this->getFilePath(['url' => $fileUrl]);
-
-        if($file !== false) return response()->file($file);
-        abort(404);
-    }
-
-    public function getFileByID($id){
-        $file = $this->getFilePath(['id' => $id]);
-
-        if($file !== false) return response()->file($file);
-        abort(404);
-    }
-
-    public static function getFile($storagePath,$filepath){
-        if($filepath === '/'){
-            $filepath = '';
-        } else {
-            $filepath = '/'.$filepath;
-        }
-
-        $explode = explode('/',$filepath);
-        if($explode[count($explode) - 1] !== 'index.html'){
-            $filepath = $filepath."/index.html";
-        }
-
-        $filepath = storage_path("${storagePath}${filepath}");
-
-        error_log("filepath $filepath");
-
-        if(!file_exists($filepath)){
-            abort(404);
-        }
-
-        return response()->file($filepath);
+        file_put_contents($filepath, $file);
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\User;
+use App\Models\Component;
 
 //This Seeder is used for default data like the admin user and role;
 
@@ -56,5 +57,35 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        $nav = Component::create([
+            'slot' => false,
+            'description' => 'Die Navigationsleiste',
+            'name' => 'Navbar',
+            'blueprint' => json_encode([
+                'componentName' => 'Empty',
+                'id' => 'nav',
+                'props'=> (object) null,
+                'slot'=> true,
+                'blueprint' => (object) null,
+                'children' => [],
+                'childrenTypes' => [],
+            ]),
+        ]);
+
+        $footer = Component::create([
+            'slot' => false,
+            'description' => 'Der Footer',
+            'name' => 'Footer',
+            'blueprint' => json_encode([
+                'componentName' => 'Empty',
+                'id' => 'footer',
+                'props' => (object) null,
+                'slot' => true,
+                'blueprint' => (object) null,
+                'children' => [],
+                'childrenTypes' => [],
+            ]),
+        ]);
     }
 }
