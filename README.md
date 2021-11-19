@@ -5,15 +5,23 @@
 ## How to use:
 ### Login
 
-- /auth/login to login, returns a jwt token and a remember me token
-- /auth/logout to logout
-- /auth/user returns the currently logged in user
+- ```/api/auth/login``` to login, returns a jwt token and a remember me token
+- ```/api/auth/logout``` to logout
+- ```/api/auth/user``` returns the currently logged in user
 
 If no jwt key is sent in an Authroization header, the public account will be used
 
-### Retrieve table entries
+### Tables
 
-/{tableName}?{parameters}
+General usage:
+
+```/api/{tableName}?{parameters}```
+
+Use 
+- ```GET``` to retrieve all entries
+- ```PUT``` to edit all found entries (e.g /api/users?id=2, user with the id 2 will be edited), usually no more than one entry at a time can be modified. Returns all edited entries.
+- ```POST``` to create a new entry. The created entry will be returned. 
+- ```DELETE``` to delete all entries that match the search query (e.g /api/users?id=2, user with the id 2 will be deleted)
 
 returns the selected entries and all their relations
 
