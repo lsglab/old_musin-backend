@@ -36,6 +36,7 @@ class SiteController extends MainController{
         return $site;
     }
 
+
     protected function createSvelteFile(Site $site){
         $dirLevel = substr_count($site->path,'/') - 1;
         $correctUrl = '';
@@ -84,5 +85,12 @@ class SiteController extends MainController{
         $filepath = $this->getFilename($site);
 
         file_put_contents($filepath, $file);
+    }
+
+    // in order for the site to export correctly, the index file needs to link to all other sites
+    // these links are created here
+    protected static function createIndex(){
+        $sites = Site::all();
+        error_log("sites $sites");
     }
 }

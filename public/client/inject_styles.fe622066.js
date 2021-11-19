@@ -1,1 +1,35 @@
-function inject_styles(e){return Promise.all(e.map((function(e){return new Promise((function(t,n){var r,l,o,u=new URL(e,import.meta.url),s=document.baseURI;s||(r=document.getElementsByTagName("base"),s=r.length?r[0].href:document.URL),l=(""+u).substring(s.length),o=document.querySelector('link[rel=stylesheet][href="'+l+'"]')||document.querySelector('link[rel=stylesheet][href="'+u+'"]'),o||(o=document.createElement("link"),o.rel="stylesheet",o.href=u,document.head.appendChild(o)),o.sheet?t():(o.onload=function(){return t()},o.onerror=n)}))})))}export default inject_styles;
+function inject_styles (files) {
+  return Promise.all(files.map(function (file) {
+    return new Promise(function (fulfil, reject) {
+      var href = new URL(file, import.meta.url);
+      var baseURI = document.baseURI;
+
+      if (!baseURI) {
+        var baseTags = document.getElementsByTagName('base');
+        baseURI = baseTags.length ? baseTags[0].href : document.URL;
+      }
+
+      var relative = ('' + href).substring(baseURI.length);
+      var link = document.querySelector('link[rel=stylesheet][href="' + relative + '"]') || document.querySelector('link[rel=stylesheet][href="' + href + '"]');
+
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        document.head.appendChild(link);
+      }
+
+      if (link.sheet) {
+        fulfil();
+      } else {
+        link.onload = function () {
+          return fulfil();
+        };
+
+        link.onerror = reject;
+      }
+    });
+  }));
+}
+
+export default inject_styles;
