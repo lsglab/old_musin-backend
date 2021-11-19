@@ -18,7 +18,7 @@ General usage:
 ```/api/{tableName}?{parameters}```
 
 Use 
-- ```GET``` to retrieve all entries
+- ```GET``` to retrieve all entries that match the query
 - ```PUT``` to edit all found entries (e.g /api/users?id=2, user with the id 2 will be edited), usually no more than one entry at a time can be modified. Returns all edited entries.
 - ```POST``` to create a new entry. The created entry will be returned. 
 - ```DELETE``` to delete all entries that match the search query (e.g /api/users?id=2, user with the id 2 will be deleted)
