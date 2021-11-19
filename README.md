@@ -63,3 +63,26 @@ Possible actions:
 - ```delete```: The user can delete all entries
 - ```delete-self```: The user can delete all entries he created
 - ```create```: The user can create entries
+
+## Creating new tables
+
+General syntax:
+
+```
+class ExampleTable extends BaseTable{
+    public string $name = 'example';
+
+    public array $children = [];
+
+    public function __construct(){
+        $this->columns = [
+
+        ];
+        $this->realtions = [
+
+        ];
+        parent::__construct();
+    }
+}
+```
+
