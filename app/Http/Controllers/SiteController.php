@@ -9,24 +9,20 @@ use App\Http\Validators\SiteValidator;
 
 class SiteController extends MainController{
     public function __construct(){
-        $this->frontendRouteFolder = env('FRONTEND_ROUTES',null);
         $this->table = new SiteTable();
         $this->validator = new SiteValidator();
         parent::__construct();
     }
 
-    protected function getFilename(Site $site){
-        return $this->frontendRouteFolder.$site->path.'.svelte';
-    }
-
     protected function editOne($site, $editData){
         $site = parent::editOne($site, $editData);
 
-        $filename = $this->getFilename($site);
+        $filename = SiteController::getFilename($site);
         //create a svelte file if the file is public but no
         //file is yet created
         if($site->public && !file_exists($filename)){
-            $this->createSvelteFile($site);
+            SiteController::createIndexFile();
+            SiteController::createSvelteFile($site);
         }
         //delete the svelte file if the file is not public but a file exists
         if(!$site->public && file_exists($filename)){
@@ -36,8 +32,13 @@ class SiteController extends MainController{
         return $site;
     }
 
+    protected static function getFilename(Site $site){
+        $frontendRouteFolder = env('FRONTEND_ROUTES',null);
+        return $frontendRouteFolder.$site->path.'.svelte';
+    }
 
-    protected function createSvelteFile(Site $site){
+
+    protected static function createSvelteFile(Site $site, string $customHtml){
         $dirLevel = substr_count($site->path,'/') - 1;
         $correctUrl = '';
 
@@ -80,17 +81,55 @@ class SiteController extends MainController{
                 export let data;
             </script>
 
+            $customHtml
+
             <Export data=\"{data}\" customComponents=\"{customComponents}\" />";
 
-        $filepath = $this->getFilename($site);
+        $filepath = SiteController::getFilename($site);
 
         file_put_contents($filepath, $file);
     }
 
+
+    public static function createIndexFile(){
+        $customHtml = SiteController::createIndexLinks();
+
+        $index = Site::where('path','/index')->get();
+
+        if(count($index) === 0){
+            $index = Site::create([
+                'path' => '/index',
+                'public' => true,
+                'blueprint' => json_encode([
+                    'componentName' => 'Empty',
+                    'id' => 'index',
+                    'props' => (object) null,
+                    'slot' => true,
+                    'blueprint' => (object) null,
+                    'children' => [],
+                    'childrenTypes' => [],
+                ]),
+            ]);
+        }
+
+        SiteController::createSvelteFile($index[0], $customHtml);
+    }
+
     // in order for the site to export correctly, the index file needs to link to all other sites
     // these links are created here
-    protected static function createIndex(){
+    public static function createIndexLinks(){
         $sites = Site::all();
-        error_log("sites $sites");
+
+        $html = '<div style="visibility:hidden;">';
+
+        foreach($sites as $site){
+            if($site->path === '/index') continue;
+
+            $html = $html."<a href='$site->path' alt=''></a>";
+        }
+
+        $html = $html."</div>";
+
+        return $html;
     }
 }
