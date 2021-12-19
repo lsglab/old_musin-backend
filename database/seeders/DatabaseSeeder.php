@@ -90,20 +90,6 @@ class DatabaseSeeder extends Seeder
             ]),
         ]);
 
-        $index = Site::create([
-            'path' => '/index',
-            'public' => true,
-             'blueprint' => json_encode([
-                'componentName' => 'Empty',
-                'id' => 'index',
-                'props' => (object) null,
-                'slot' => true,
-                'blueprint' => (object) null,
-                'children' => [],
-                'childrenTypes' => [],
-            ]),
-        ]);
-
         SiteController::createIndexFile();
     }
 }

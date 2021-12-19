@@ -14,7 +14,18 @@ class SiteController extends MainController{
         parent::__construct();
     }
 
+    protected function deleteOne($entry){
+        if($entry->path === '/index'){
+            return;
+        }
+        parent::deleteOne($entry);
+    }
+
     protected function editOne($site, $editData){
+        if($site->path === '/index' && $editData['path'] != null ){
+            unset($editData['path']);
+        }
+
         $site = parent::editOne($site, $editData);
 
         $filename = SiteController::getFilename($site);
@@ -22,7 +33,7 @@ class SiteController extends MainController{
         //file is yet created
         if($site->public && !file_exists($filename)){
             SiteController::createIndexFile();
-            SiteController::createSvelteFile($site);
+            SiteController::createSvelteFile($site, '');
         }
         //delete the svelte file if the file is not public but a file exists
         if(!$site->public && file_exists($filename)){
@@ -48,7 +59,7 @@ class SiteController extends MainController{
 
         $file = "<script context=\"module\">
             import Export from '../${correctUrl}components/cms/export.svelte';
-            import request from '../${correctUrl}cms/Utils/requests';
+            import request from '../${correctUrl}Utils/requests';
 
             async function fetchCustomComponents(apiUrl) {
                 const res = await request(`\${apiUrl}/components?_norelations=true`, 'get', {}, false);
