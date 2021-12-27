@@ -14,10 +14,28 @@ class SiteController extends MainController{
         parent::__construct();
     }
 
+    private static function deleteFile(Site $site){
+        $filename = SiteController::getFilename($site);
+
+        if(file_exists($filename)){
+            unlink($filename);
+        }
+    }
+
+    private static function createFile(Site $site, String $file){
+        error_log("create File");
+        $filepath = SiteController::getFilename($site);
+
+        file_put_contents($filepath, $file);
+    }
+
     protected function deleteOne($entry){
         if($entry->path === '/index'){
             return;
         }
+
+        SiteController::deleteFile($entry);
+
         parent::deleteOne($entry);
     }
 
@@ -32,12 +50,13 @@ class SiteController extends MainController{
         //create a svelte file if the file is public but no
         //file is yet created
         if($site->public && !file_exists($filename)){
+            error_log("hellooo");
             SiteController::createIndexFile();
             SiteController::createSvelteFile($site, '');
         }
-        //delete the svelte file if the file is not public but a file exists
-        if(!$site->public && file_exists($filename)){
-            unlink($filename);
+        //delete the svelte file if the file is not public
+        if(!$site->public){
+            SiteController::deleteFile($site);
         }
 
         return $site;
@@ -78,7 +97,11 @@ class SiteController extends MainController{
 
             export async function preload(page, session) {
                 const apiUrl = session.globals.apiUrl;
-                const path = page.path;
+                let path = page.path;
+
+                if(path === '/'){
+                    path = '/index';
+                }
 
                 const customComponents = await fetchCustomComponents(apiUrl);
                 const data = await fetchData(apiUrl, path);
@@ -96,9 +119,7 @@ class SiteController extends MainController{
 
             <Export data=\"{data}\" customComponents=\"{customComponents}\" />";
 
-        $filepath = SiteController::getFilename($site);
-
-        file_put_contents($filepath, $file);
+        SiteController::createFile($site, $file);
     }
 
 
@@ -121,9 +142,11 @@ class SiteController extends MainController{
                     'childrenTypes' => [],
                 ]),
             ]);
+        } else {
+            $index = $index[0];
         }
 
-        SiteController::createSvelteFile($index[0], $customHtml);
+        SiteController::createSvelteFile($index, $customHtml);
     }
 
     // in order for the site to export correctly, the index file needs to link to all other sites
@@ -136,7 +159,7 @@ class SiteController extends MainController{
         foreach($sites as $site){
             if($site->path === '/index') continue;
 
-            $html = $html."<a href='$site->path' alt=''></a>";
+            $html = $html."<a href='$site->path' alt=''>'$site->path'</a>";
         }
 
         $html = $html."</div>";
