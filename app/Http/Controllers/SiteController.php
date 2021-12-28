@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use GuzzleHttp\Client;
 use App\Http\Controllers\Base\MainController;
 use App\Tables\SiteTable;
 use App\Models\Site;
@@ -16,7 +17,7 @@ class SiteController extends MainController{
         parent::__construct();
     }
 
-    private static function commitAndPush(Site $site, String $action){
+    private static function commitAndPush(Site $site, String $action) : bool{
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
 
@@ -39,7 +40,7 @@ class SiteController extends MainController{
 
         chdir($backendLocation);
 
-        error_log("execution finished");
+        SiteController::dispatchGithubWorkflow();
     }
 
     private static function deleteFile(Site $site){
@@ -91,6 +92,7 @@ class SiteController extends MainController{
             SiteController::deleteFile($site);
         }
 
+        SiteControler::dispatchGithubWorkflow();
         return $site;
     }
 
@@ -203,5 +205,34 @@ class SiteController extends MainController{
         $html = $html."</div>";
 
         return $html;
+    }
+
+    private static function dispatchGithubWorkflow() : bool{
+        $url = env('GITHUB_WORKFLOW_URL', null);
+        $branch = env('GITHUB_WORKFLOW_BRANCH', null);
+        $token = env('GITHUB_ACCESS_TOKEN', null);
+
+        if($url == null || $branch == null || $token == null){
+            return false;
+        }
+
+        $client = new Client();
+        $res = $client->request("POST", $url, [
+            "headers" => [
+                "Accept" => "application/vnd.github.v3+json",
+                "Authorization" => "token $token",
+            ],
+            "json"=> [
+                "ref" => $branch
+            ]
+        ]);
+
+        error_log($res->getBody());
+
+        if($res->getStatusCode() === 200){
+            return true;
+        }
+
+        return false;
     }
 }
