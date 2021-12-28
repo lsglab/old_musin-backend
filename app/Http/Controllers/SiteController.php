@@ -2,20 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use GuzzleHttp\Client;
 use App\Http\Controllers\Base\MainController;
 use App\Tables\SiteTable;
 use App\Models\Site;
 use App\Http\Validators\SiteValidator;
 
 class SiteController extends MainController{
+
+
     public function __construct(){
         $this->table = new SiteTable();
         $this->validator = new SiteValidator();
         parent::__construct();
     }
 
+    private static function commitAndPush(Site $site, String $action) : bool{
+        $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
+        $backendLocation = env('BACKEND_LOCATION', null);
+
+        chdir($frontendRoutesFolder);
+
+        $currentUser = auth()->user();
+        $currentUserEmail = "";
+
+        if($currentUser == null){
+            $currentUser = "server";
+        } else {
+            $currentUserEmail = $currentUser->email;
+            $currentUser = $currentUser->name;
+        }
+
+        $message = "feat: ".$currentUser." ".$action." site: ".$site->path;
+        shell_exec("git add .");
+        shell_exec("git -c user.name=\"$currentUser\" -c user.email=\"$currentUserEmail\" commit  -m \"$message\"");
+        shell_exec("git push");
+
+        chdir($backendLocation);
+
+        SiteController::dispatchGithubWorkflow();
+    }
+
     private static function deleteFile(Site $site){
         $filename = SiteController::getFilename($site);
+        $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
+        $backendLocation = env('BACKEND_LOCATION', null);
 
         if(file_exists($filename)){
             unlink($filename);
@@ -35,6 +66,7 @@ class SiteController extends MainController{
         }
 
         SiteController::deleteFile($entry);
+        SiteController::commitAndPush($entry, "deleted");
 
         parent::deleteOne($entry);
     }
@@ -53,18 +85,20 @@ class SiteController extends MainController{
             error_log("hellooo");
             SiteController::createIndexFile();
             SiteController::createSvelteFile($site, '');
+            SiteController::commitAndPush($site, "created");
         }
         //delete the svelte file if the file is not public
         if(!$site->public){
             SiteController::deleteFile($site);
         }
 
+        SiteControler::dispatchGithubWorkflow();
         return $site;
     }
 
     protected static function getFilename(Site $site){
-        $frontendRouteFolder = env('FRONTEND_ROUTES',null);
-        return $frontendRouteFolder.$site->path.'.svelte';
+        $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
+        return $frontendRoutesFolder.$site->path.'.svelte';
     }
 
 
@@ -123,7 +157,7 @@ class SiteController extends MainController{
     }
 
 
-    public static function createIndexFile(){
+    public static function createIndexFile() : Site{
         $customHtml = SiteController::createIndexLinks();
 
         $index = Site::where('path','/index')->get();
@@ -147,6 +181,12 @@ class SiteController extends MainController{
         }
 
         SiteController::createSvelteFile($index, $customHtml);
+        return $index;
+    }
+
+    public static function seed(){
+        $index = SiteController::createIndexFile();
+        SiteController::commitAndPush($index, "setup");
     }
 
     // in order for the site to export correctly, the index file needs to link to all other sites
@@ -165,5 +205,34 @@ class SiteController extends MainController{
         $html = $html."</div>";
 
         return $html;
+    }
+
+    private static function dispatchGithubWorkflow() : bool{
+        $url = env('GITHUB_WORKFLOW_URL', null);
+        $branch = env('GITHUB_WORKFLOW_BRANCH', null);
+        $token = env('GITHUB_ACCESS_TOKEN', null);
+
+        if($url == null || $branch == null || $token == null){
+            return false;
+        }
+
+        $client = new Client();
+        $res = $client->request("POST", $url, [
+            "headers" => [
+                "Accept" => "application/vnd.github.v3+json",
+                "Authorization" => "token $token",
+            ],
+            "json"=> [
+                "ref" => $branch
+            ]
+        ]);
+
+        error_log($res->getBody());
+
+        if($res->getStatusCode() === 200){
+            return true;
+        }
+
+        return false;
     }
 }
