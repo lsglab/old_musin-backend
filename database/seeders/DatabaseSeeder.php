@@ -90,6 +90,6 @@ class DatabaseSeeder extends Seeder
             ]),
         ]);
 
-        SiteController::createIndexFile();
+        SiteController::seed();
     }
 }
