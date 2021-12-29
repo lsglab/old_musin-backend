@@ -17,7 +17,7 @@ class SiteController extends MainController{
         parent::__construct();
     }
 
-    private static function commitAndPush(Site $site, String $action) : bool{
+    private static function commitAndPush(Site $site, String $action){
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
 
