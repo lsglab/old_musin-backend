@@ -19,12 +19,19 @@ class SiteController extends MainController{
 
     // commit And Push only runs in production
     private static function commitAndPush(Site $site, String $action){
-        if(config('app.env') == 'local'){
+        if(config('app.env') === 'local'){
             return;
         }
 
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
+        $gitUsername = env('GITHUB_USERNAME', null);
+        $gitToken = env('GITHUB_ACCESS_TOKEN', null);
+        $gitRepo = env('GITHUB_REPOSITORY', null);
+
+        if($frontendRoutesFolder == null || $backendLocation == null || $gitUsername == null || $gitToken == null || $gitRepo == null){
+            return;
+        }
 
         chdir($frontendRoutesFolder);
 
@@ -41,7 +48,7 @@ class SiteController extends MainController{
         $message = "feat: ".$currentUser." ".$action." site: ".$site->path;
         shell_exec("git add .");
         shell_exec("git -c user.name=\"$currentUser\" -c user.email=\"$currentUserEmail\" commit  -m \"$message\"");
-        shell_exec("git push");
+        shell_exec("git push https://$gitToken@github.com/$gitRepo");
 
         chdir($backendLocation);
     }
@@ -214,7 +221,7 @@ $customHtml
     }
 
     private static function dispatchGithubWorkflow() : bool{
-        if(config('app.env') == 'local'){
+        if(config('app.env') === 'local'){
             return false;
         }
 
