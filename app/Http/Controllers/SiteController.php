@@ -167,6 +167,7 @@ $file = "<script context=\"module\">
 $customHtml
 
 <Export data=\"{data}\" customComponents=\"{customComponents}\" />
+
 ";
 
         SiteController::createFile($site, $file);
