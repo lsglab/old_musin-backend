@@ -18,7 +18,6 @@ class SiteValidator extends BaseValidator{
         $pathValidation = ['regex:/^\/(?(?=[a-zA-Z\/_])(?!.*(\/)\1+)[a-zA-Z\/_]+$)/'];
 
         $validation['path'] = array_merge($validation['path'],$pathValidation);
-        $validation['path'] = array_merge($validation['path'], [new FileDoesNotExist]);
 
         return $validation;
     }
@@ -30,6 +29,7 @@ class SiteValidator extends BaseValidator{
 
     protected function createValidation($object) : array{
         $validation = parent::createValidation($object);
+        $validation['path'] = array_merge($validation['path'], [new FileDoesNotExist]);
         return $this->customValidation($validation);
     }
 }
