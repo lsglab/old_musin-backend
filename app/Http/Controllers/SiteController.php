@@ -25,11 +25,10 @@ class SiteController extends MainController{
 
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
-        $gitUsername = env('GITHUB_USERNAME', null);
         $gitToken = env('GITHUB_ACCESS_TOKEN', null);
         $gitRepo = env('GITHUB_REPOSITORY', null);
 
-        if($frontendRoutesFolder == null || $backendLocation == null || $gitUsername == null || $gitToken == null || $gitRepo == null){
+        if($frontendRoutesFolder == null || $backendLocation == null || $gitToken == null || $gitRepo == null){
             return;
         }
 
