@@ -71,7 +71,7 @@ class SiteController extends MainController{
 
         SiteController::deleteFile($entry);
         SiteController::commitAndPush($entry, "deleted");
-        SiteControler::dispatchGithubWorkflow();
+        SiteController::dispatchGithubWorkflow();
     }
 
     protected function editOne($site, $editData){
@@ -96,7 +96,7 @@ class SiteController extends MainController{
             SiteController::commitAndPush($site, "deleted");
         }
 
-        SiteControler::dispatchGithubWorkflow();
+        SiteController::dispatchGithubWorkflow();
         return $site;
     }
 
