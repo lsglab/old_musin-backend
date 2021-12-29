@@ -46,7 +46,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Public',
             'email' => 'public@lsg.de',
             'password' => '',
-            'role_id' => $admin->id,
+            'role_id' => $public->id,
         ]);
 
         foreach($tables as $table){
