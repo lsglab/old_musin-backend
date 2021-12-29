@@ -3,6 +3,7 @@
 namespace App\Http\Validators;
 
 use App\Tables\SiteTable;
+use App\Rules\FileDoesNotExist;
 
 class SiteValidator extends BaseValidator{
 
@@ -17,6 +18,7 @@ class SiteValidator extends BaseValidator{
         $pathValidation = ['regex:/^\/(?(?=[a-zA-Z\/_])(?!.*(\/)\1+)[a-zA-Z\/_]+$)/'];
 
         $validation['path'] = array_merge($validation['path'],$pathValidation);
+        $validation['path'] = array_merge($validation['path'], [new FileDoesNotExist]);
 
         return $validation;
     }

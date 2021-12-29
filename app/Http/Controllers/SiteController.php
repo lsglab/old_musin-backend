@@ -17,7 +17,12 @@ class SiteController extends MainController{
         parent::__construct();
     }
 
-    private static function commitAndPush(Site $site, String $action) : bool{
+    // commit And Push only runs in production
+    private static function commitAndPush(Site $site, String $action){
+        if(config('app.env') == 'local'){
+            return;
+        }
+
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
 
@@ -39,12 +44,10 @@ class SiteController extends MainController{
         shell_exec("git push");
 
         chdir($backendLocation);
-
-        SiteController::dispatchGithubWorkflow();
     }
 
     private static function deleteFile(Site $site){
-        $filename = SiteController::getFilename($site);
+        $filename = SiteController::getFilename($site->path);
         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
         $backendLocation = env('BACKEND_LOCATION', null);
 
@@ -54,8 +57,7 @@ class SiteController extends MainController{
     }
 
     private static function createFile(Site $site, String $file){
-        error_log("create File");
-        $filepath = SiteController::getFilename($site);
+        $filepath = SiteController::getFilename($site->path);
 
         file_put_contents($filepath, $file);
     }
@@ -65,10 +67,11 @@ class SiteController extends MainController{
             return;
         }
 
+        parent::deleteOne($entry);
+
         SiteController::deleteFile($entry);
         SiteController::commitAndPush($entry, "deleted");
-
-        parent::deleteOne($entry);
+        SiteControler::dispatchGithubWorkflow();
     }
 
     protected function editOne($site, $editData){
@@ -78,29 +81,29 @@ class SiteController extends MainController{
 
         $site = parent::editOne($site, $editData);
 
-        $filename = SiteController::getFilename($site);
+        $filename = SiteController::getFilename($site->path);
         //create a svelte file if the file is public but no
         //file is yet created
         if($site->public && !file_exists($filename)){
-            error_log("hellooo");
             SiteController::createIndexFile();
             SiteController::createSvelteFile($site, '');
             SiteController::commitAndPush($site, "created");
         }
         //delete the svelte file if the file is not public
         if(!$site->public){
+            SiteController::createIndexFile();
             SiteController::deleteFile($site);
+            SiteController::commitAndPush($site, "deleted");
         }
 
         SiteControler::dispatchGithubWorkflow();
         return $site;
     }
 
-    protected static function getFilename(Site $site){
-        $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
-        return $frontendRoutesFolder.$site->path.'.svelte';
+    public static function getFilename(String $sitepath){
+         $frontendRoutesFolder = env('FRONTEND_ROUTES', null);
+        return $frontendRoutesFolder.$sitepath.'.svelte';
     }
-
 
     protected static function createSvelteFile(Site $site, string $customHtml){
         $dirLevel = substr_count($site->path,'/') - 1;
@@ -110,54 +113,56 @@ class SiteController extends MainController{
             $correctUrl = $correctUrl.'../';
         }
 
-        $file = "<script context=\"module\">
-            import Export from '../${correctUrl}components/cms/export.svelte';
-            import request from '../${correctUrl}Utils/requests';
+$file = "<script context=\"module\">
+    import Export from '../${correctUrl}components/cms/export.svelte';
+    import request from '../${correctUrl}Utils/requests';
 
-            async function fetchCustomComponents(apiUrl) {
-                const res = await request(`\${apiUrl}/components?_norelations=true`, 'get', {}, false);
+    async function fetchCustomComponents(apiUrl) {
+        const res = await request(`\${apiUrl}/components?_norelations=true`, 'get', {}, false);
 
-                if (res.status === 200) {
-                    return res.data.components;
-                }
-                return [];
-            }
+        if (res.status === 200) {
+            return res.data.components;
+        }
+        return [];
+    }
 
-            async function fetchData(apiUrl, path) {
-                const res = await request(`\${apiUrl}/sites?path=\${path}`, 'get', {}, false);
+    async function fetchData(apiUrl, path) {
+        const res = await request(`\${apiUrl}/sites?path=\${path}`, 'get', {}, false);
 
-                return JSON.parse(res.data.sites[0].blueprint);
-            }
+        return JSON.parse(res.data.sites[0].blueprint);
+    }
 
-            export async function preload(page, session) {
-                const apiUrl = session.globals.apiUrl;
-                let path = page.path;
+    export async function preload(page, session) {
+        const apiUrl = session.globals.apiUrl;
+        let path = page.path;
 
-                if(path === '/'){
-                    path = '/index';
-                }
+        if(path === '/'){
+            path = '/index';
+        }
 
-                const customComponents = await fetchCustomComponents(apiUrl);
-                const data = await fetchData(apiUrl, path);
+        const customComponents = await fetchCustomComponents(apiUrl);
+        const data = await fetchData(apiUrl, path);
 
-                return { customComponents, data };
-            }
-            </script>
+        return { customComponents, data };
+    }
+</script>
 
-            <script>
-                export let customComponents;
-                export let data;
-            </script>
+<script>
+    export let customComponents;
+    export let data;
+</script>
 
-            $customHtml
+$customHtml
 
-            <Export data=\"{data}\" customComponents=\"{customComponents}\" />";
+<Export data=\"{data}\" customComponents=\"{customComponents}\" />
+
+";
 
         SiteController::createFile($site, $file);
     }
 
 
-    public static function createIndexFile() : Site{
+    public static function createIndexFile() : Site {
         $customHtml = SiteController::createIndexLinks();
 
         $index = Site::where('path','/index')->get();
@@ -187,6 +192,7 @@ class SiteController extends MainController{
     public static function seed(){
         $index = SiteController::createIndexFile();
         SiteController::commitAndPush($index, "setup");
+        SiteController::dispatchGithubWorkflow();
     }
 
     // in order for the site to export correctly, the index file needs to link to all other sites
@@ -208,6 +214,10 @@ class SiteController extends MainController{
     }
 
     private static function dispatchGithubWorkflow() : bool{
+        if(config('app.env') == 'local'){
+            return false;
+        }
+
         $url = env('GITHUB_WORKFLOW_URL', null);
         $branch = env('GITHUB_WORKFLOW_BRANCH', null);
         $token = env('GITHUB_ACCESS_TOKEN', null);
