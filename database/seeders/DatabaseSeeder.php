@@ -8,7 +8,7 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Models\Site;
 use App\Models\Component;
-use App\Http\Controllers\SiteController;
+use App\Http\Controllers\Frontend\SiteController;
 
 //This Seeder is used for default data like the admin user and role;
 

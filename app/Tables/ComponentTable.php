@@ -10,6 +10,7 @@ use App\Tables\Base\Columns\JSON;
 class ComponentTable extends BaseTable{
 
     public string $name = 'component';
+    public ?string $controller = 'App\Http\Controllers\Frontend\ComponentController';
 
     public function __construct(){
         $this->columns = [

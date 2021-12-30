@@ -10,9 +10,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ColumnPermissionController;
 use App\Http\Controllers\FileController;
-use App\Http\Controllers\SiteController;
+use App\Http\Controllers\Frontend\SiteController;
 use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\Frontend\ComponentController;
 
 /*
 |--------------------------------------------------------------------------

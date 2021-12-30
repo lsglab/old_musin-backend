@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AuthCookie;
 use App\Http\Controllers\FileController;
-use App\Http\Controllers\SiteController;
+use App\Http\Controllers\Frontend\SiteController;
 
 /*
 |--------------------------------------------------------------------------

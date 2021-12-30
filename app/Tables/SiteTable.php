@@ -11,6 +11,7 @@ use App\Tables\Base\Columns\JSON;
 class SiteTable extends BaseTable{
 
     public string $name = 'site';
+    public ?string $controller = 'App\Http\Controllers\Frontend\SiteController';
 
 
     public function __construct(){

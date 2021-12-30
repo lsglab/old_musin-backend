@@ -3,7 +3,7 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
-use App\Http\Controllers\SiteController;
+use App\Http\Controllers\Frontend\SiteController;
 
 class FileDoesNotExist implements Rule
 {
